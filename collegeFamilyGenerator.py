@@ -9,7 +9,7 @@ parents = pd.read_csv("Test Data\Parents.csv", skiprows=1,
             usecols=range(1,14))
 
 children = pd.read_csv("Test Data\Children.csv", skiprows=1,
-            names=["email","name","subjects",
+            names=["email","name","subject",
                    "contactAmount","meetingPlaces",
                    "arts","sports","entertainment","nightOut"],
             usecols=range(1,10))
