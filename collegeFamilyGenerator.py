@@ -1,27 +1,18 @@
 ### College Family Generator
 
-import csv
+import pandas as pd
 
-def importCSVFile(filename):
+parents = pd.read_csv("Test Data\Parents.csv", skiprows=1,
+            names=["email","name1","name2","name3","yearGoingInto","childrenAlready","subjects",
+                   "contactAmount","meetingPlaces",
+                   "arts","sports","entertainment","nightOut"],
+            usecols=range(1,14))
 
-    with open(filename) as file:
-        # Setup reader
-        csvReader = csv.reader(file)
+children = pd.read_csv("Test Data\Children.csv", skiprows=1,
+            names=["email","name","subjects",
+                   "contactAmount","meetingPlaces",
+                   "arts","sports","entertainment","nightOut"],
+            usecols=range(1,10))
 
-        # Setup dictionary (to be returned)
-        dictionary = {}
-        
-        personID = 0
-        for row in csvReader:
-            dictionary[personID] = row[1:] # Removes Timestamp Column
-            personID += 1
-            
-        # Delete Header Row
-        del dictionary[0]
+print(parents.iloc[0]["email"])
 
-        return dictionary
-
-
-parents = importCSVFile("Test Data\Parents.csv")
-
-print(parents[1])
