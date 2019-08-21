@@ -1,0 +1,11 @@
+Downloading CSVs
+
+1. Go to Parent Responses Spreadsheet Online
+
+2. Download as Excel File
+
+3. Open download
+
+4. Run 'FormatforCollegeFamilies' Macro
+
+5 Repeat for Children Responses
