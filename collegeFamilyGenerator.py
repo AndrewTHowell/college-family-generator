@@ -6,7 +6,7 @@ import pandas as pd
 ############### Importing CSV Files ###############
 
 # Location of Folder containing CSV Files
-CSVLocation = "Test Data"
+CSVLocation = "D:\howel\OneDrive - Durham University\Exec\VP Development\College Families\college-family-generator\Test Data"
 
 # Create the Parents Panda, extracting info from CSV files
 parents = pd.read_csv("{0}\Parents.csv".format(CSVLocation), skiprows=1,
@@ -27,8 +27,6 @@ parents.insert(0, "ID", range(0,len(parents)))
 children.insert(0, "ID", range(0,len(children)))
 
 ###################################################
-
-
 
 ################# Pandas are setup and ready, structure shown below #################
 
