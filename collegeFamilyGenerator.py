@@ -7,17 +7,17 @@ import pandas as pd
 ############### Importing CSV Files ###############
 
 # Location of Folder containing CSV Files
-CSVLocation = "Test Data\"
+CSVLocation = "Test Data"
 
 # Create the Parents Panda, extracting info from CSV files
-parents = pd.read_csv("{0}Parents.csv".format(CSVLocation), skiprows=1,
+parents = pd.read_csv("{0}\Parents.csv".format(CSVLocation), skiprows=1,
             names=["email","name1","name2","name3","yearGoingInto","childrenAlready",
                    "subjects","contactAmount","meetingPlaces",
                    "arts","sports","entertainment","nightOut"],
             usecols=range(1,14))
 
 # Create the Parents Panda, extracting info from CSV files
-children = pd.read_csv("{0}Children.csv".format(CSVLocation), skiprows=1,
+children = pd.read_csv("{0}\Children.csv".format(CSVLocation), skiprows=1,
             names=["email","name","subject",
                    "contactAmount","meetingPlaces",
                    "arts","sports","entertainment","nightOut"],
