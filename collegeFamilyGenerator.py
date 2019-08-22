@@ -1,8 +1,7 @@
-### College Family Generator
+############### College Family Generator ###############
 
 # Import Pandas library, used to store information about each child and parent
 import pandas as pd
-
 
 ############### Importing CSV Files ###############
 
@@ -42,11 +41,17 @@ children.insert(0, "ID", range(0,len(children)))
 #####################################################################################
 
 
-############### Forming Allocation Data Structure ###############
 
+############### Forming Allocation Data Structure ###############
 
 #row = parents.loc[0]
 #email = row["email"]
 
 # Allocation stored in
 allocation = []
+
+#################################################################
+
+
+
+###############  ###############
