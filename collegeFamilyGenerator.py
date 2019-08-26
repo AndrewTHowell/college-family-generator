@@ -3,8 +3,11 @@
 
 # Section: Importing Modules
 
-# Import Pandas library, used to store information about each child and parent
+# Used to store information about each child and parent
 import pandas as pd
+
+# Used to find all permutations of allocations
+from itertools import permutations
 
 # Section End
 
@@ -90,13 +93,15 @@ def evaluateMatching(match):
 
     matchScore = 0
 
-    matchScore += SUBJECTMULTIPLIER * evaluateSubject(match)
-    matchScore += CONTACTMULTIPLIER * evaluateContact(match)
-    matchScore += MEETINGMULTIPLIER * evaluateMeeting(match)
-    matchScore += ARTSMULTIPLIER * evaluateArts(match)
-    matchScore += SPORTSMULTIPLIER * evaluateSports(match)
-    matchScore += ENTERTAINMENTMULTIPLIER * evaluateEntertainment(match)
-    matchScore += NIGHTOUTMULTIPLIER * evaluateNightOut(match)
+    parentID, childID = match
+    matchScore += SUBJECTMULTIPLIER * evaluateSubject(parentID, childID)
+    matchScore += CONTACTMULTIPLIER * evaluateContact(parentID, childID)
+    matchScore += MEETINGMULTIPLIER * evaluateMeeting(parentID, childID)
+    matchScore += ARTSMULTIPLIER * evaluateArts(parentID, childID)
+    matchScore += SPORTSMULTIPLIER * evaluateSports(parentID, childID)
+    matchScore += ENTERTAINMENTMULTIPLIER * (evaluateEntertainment(
+                                                            parentID, childID))
+    matchScore += NIGHTOUTMULTIPLIER * evaluateNightOut(parentID, childID)
 
     return matchScore
 
@@ -113,6 +118,7 @@ def evaluateContact(parentID, childID):
 
     score = 0
 
+    # Gets Contact info of Parent
     parentContact = parents.loc[parentID]["contactAmount"]
     childrenContact = children.loc[childID]["contactAmount"]
 
@@ -123,6 +129,7 @@ def evaluateContact(parentID, childID):
 
 def evaluateMeeting(parentID, childID):
 
+    # Gets Meeting Places info of Parent
     parentActivities = parents.loc[parentID]["meetingPlaces"]
     childrenActivities = children.loc[childID]["meetingPlaces"]
 
@@ -133,6 +140,7 @@ def evaluateMeeting(parentID, childID):
 
 def evaluateArts(parentID, childID):
 
+    # Gets Arts info of Parent
     parentActivities = parents.loc[parentID]["arts"]
     childrenActivities = children.loc[childID]["arts"]
 
@@ -143,6 +151,7 @@ def evaluateArts(parentID, childID):
 
 def evaluateSports(parentID, childID):
 
+    # Gets Sports info of Parent
     parentActivities = parents.loc[parentID]["sports"]
     childrenActivities = children.loc[childID]["sports"]
 
@@ -152,21 +161,30 @@ def evaluateSports(parentID, childID):
 
 
 def evaluateEntertainment(parentID, childID):
-    print("Evaluating")
 
-    score = 0
+    # Gets Entertainment info of Parent
+    parentActivities = parents.loc[parentID]["entertainment"]
+    childrenActivities = children.loc[childID]["entertainment"]
+
+    score = compareActivities(parentActivities, childrenActivities)
 
     return score
 
 
 def evaluateNightOut(parentID, childID):
-    print("Evaluating")
 
     score = 0
+
+    # Gets Contact info of Parent
+    parentContact = parents.loc[parentID]["contactAmount"]
+    childrenContact = children.loc[childID]["contactAmount"]
+
+    score += compareScale(parentContact, childrenContact)
 
     return score
 
 
+# Formats cells containing Activities ready for compareActivities()
 def formatCell(array):
 
     # Remove spaces from excel formatCell
@@ -182,19 +200,23 @@ def formatCell(array):
     return finalArray
 
 
+# Compares parent and child lists of activities
+# Scores them based on the percentage of Child activities shared by the Parents
 def compareActivities(parentActivities, childActivities):
 
+    # Format cells -> remove spaces, split into list of activities, become set
     parentActivities = formatCell(parentActivities)
     childActivities = formatCell(childActivities)
 
+    # Percentage of child's activities shared by parents calculated
     sharedActivities = parentActivities.intersection(childActivities)
     # totalActivities = parentActivities.union(childActivities)
     # percentageSharedTotal = 100 * len(sharedActivities)/len(totalActivities)
     percentageSharedChild = (100 * len(sharedActivities)/len(
-        childActivities))
+                                                            childActivities))
 
-    print(sharedActivities)
-    print(childActivities)
+    # print(sharedActivities)
+    # print(childActivities)
 
     # Convert percentage to score out of 10, to 1 decimal place
     score = round(percentageSharedChild / 10, 1)
@@ -220,10 +242,18 @@ def compareActivities(parentActivities, childActivities):
     return score
 
 
+# Compares parent and child scalar scores
+# Scores them based on their difference along the scale
+# e.g. compareScale(5,2) < compareScale(3,1) < compareScale(2,2)
 def compareScale(value1, value2):
 
+    # Find absolute (positive) difference between two scale values
     difference = abs(value1 - value2)
 
+    # print(value1, value2)
+    # print(difference)
+
+    # Scoring system based off of difference, further away -> smaller score
     if difference == 0:
         return 10
     elif difference == 1:
@@ -252,9 +282,6 @@ for index, row in parents.iterrows():
     for i in range(3):
         allocation.append([row["ID"], -1])
 
-# for row in allocation:
-#    print(row)
-
 # Region: Allocation Structure
 
 # Allocation = [ [ParentID, ChildID], [ParentID, ChildID], ... ]
@@ -271,5 +298,27 @@ for index, row in parents.iterrows():
 
 # Section End
 
-for i in range(5):
-    print(evaluateSports(0, i))
+# Section: Main Functions
+
+# Evaluate every permutation of allocations, finding the highest scoring
+
+optimumAllocation = []
+optimumAllocationScore = 0
+
+# Get number of parent slots available
+numberOfParents = len(parents.index)
+numberofParentSlots = 3 * numberOfParents
+
+# Get range of all children IDs
+numberOfChildren = len(children.index)
+childIDRange = range(numberOfChildren)
+
+allAllocations = permutations(childIDRange, numberofParentSlots)
+
+for i in list(allAllocations):
+    print(i)
+
+# Section End
+
+# FIGURE OUT HOW TO CREATE ALLOCATION PERMUTATIONS
+# ADD MEMOIZATION
