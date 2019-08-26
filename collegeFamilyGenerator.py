@@ -56,8 +56,17 @@ children.insert(0, "ID", range(0, len(children)))
 # row = parents.loc[0]
 # email = row["email"]
 
-# Allocation stored in
+# Allocation stored in 2D Array: [ParentID, ChildID]
 allocation = []
+
+# Add Parents to allocation
+# Each Parent has 3 child 'slots'
+for index, row in parents.iterrows():
+    for i in range(3):
+        allocation.append([row["ID"], -1])
+
+for row in allocation:
+    print(row)
 
 ###############################################################################
 
