@@ -321,4 +321,4 @@ for i in list(allAllocations):
 # Section End
 
 # FIGURE OUT HOW TO CREATE ALLOCATION PERMUTATIONS
-# ADD MEMOIZATION
+# ADD MEMOIZATION to all evaluation functions (bar evaluateAllocation)
