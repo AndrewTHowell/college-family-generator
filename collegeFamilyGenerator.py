@@ -50,6 +50,10 @@ children = pd.read_csv("{0}\\Children.csv".format(CSVLocation), skiprows=1,
 parents.insert(0, "ID", range(0, len(parents)))
 children.insert(0, "ID", range(0, len(children)))
 
+# Fill in missing values (empty cells) as empty strings
+parents = parents.fillna("")
+children = children.fillna("")
+
 # Region: Panda Structures
 
 # Parents : ID, email, name1, name2, name3, yearGoingInto, childrenAlready,
@@ -119,43 +123,30 @@ def evaluateContact(parentID, childID):
 
 def evaluateMeeting(parentID, childID):
 
-    parentMeetingPlaces = formatCell((parents.loc[parentID]["meetingPlaces"]))
-    childrenMeetingPlaces = formatCell(children.loc[childID]["meetingPlaces"])
+    parentActivities = parents.loc[parentID]["meetingPlaces"]
+    childrenActivities = children.loc[childID]["meetingPlaces"]
 
-    sharedActivities = parentMeetingPlaces.intersection(childrenMeetingPlaces)
-    # totalActivities = parentMeetingPlaces.union(childrenMeetingPlaces)
-    # percentageSharedTotal = 100 * len(sharedActivities)/len(totalActivities)
-    percentageSharedChild = (100 * len(sharedActivities)/len(
-        childrenMeetingPlaces))
-
-    # Convert percentage to score out of 10, to 1 decimal place
-    score = round(percentageSharedChild / 10, 1)
-
-#    print("Parent {0}  with Child {1}".format(parentID, childID))#
-#    print()
-#    print("Parent {0}: ".format(parentID), end='')
-#    print(parentMeetingPlaces)
-#    print("Child {0}: ".format(childID), end='')
-#    print(childrenMeetingPlaces)
-#    print()
-#    print("Shared Activities: ", end='')
-#    print(sharedActivities)
-#    # print("Total Activities: ", end='')
-#    # print(totalActivities)
-#    print("Percentage Shared (Total): ", end='')
-#    print(str(percentageSharedTotal) + "%")
-#    print("Percentage Shared (Child): ", end='')
-#    print(str(percentageSharedChild) + "%")
-#    print()
-#    print()
+    score = compareActivities(parentActivities, childrenActivities)
 
     return score
 
 
 def evaluateArts(parentID, childID):
-    print("Evaluating")
 
-    score = 0
+    parentActivities = parents.loc[parentID]["arts"]
+    childrenActivities = children.loc[childID]["arts"]
+
+    score = compareActivities(parentActivities, childrenActivities)
+
+    return score
+
+
+def evaluateSports(parentID, childID):
+
+    parentActivities = parents.loc[parentID]["sports"]
+    childrenActivities = children.loc[childID]["sports"]
+
+    score = compareActivities(parentActivities, childrenActivities)
 
     return score
 
@@ -191,7 +182,45 @@ def formatCell(array):
     return finalArray
 
 
-def compare(value1, value2):
+def compareActivities(parentActivities, childActivities):
+
+    parentActivities = formatCell(parentActivities)
+    childActivities = formatCell(childActivities)
+
+    sharedActivities = parentActivities.intersection(childActivities)
+    # totalActivities = parentActivities.union(childActivities)
+    # percentageSharedTotal = 100 * len(sharedActivities)/len(totalActivities)
+    percentageSharedChild = (100 * len(sharedActivities)/len(
+        childActivities))
+
+    print(sharedActivities)
+    print(childActivities)
+
+    # Convert percentage to score out of 10, to 1 decimal place
+    score = round(percentageSharedChild / 10, 1)
+
+    #    print("Parent {0}  with Child {1}".format(parentID, childID))#
+    #    print()
+    #    print("Parent {0}: ".format(parentID), end='')
+    #    print(parentMeetingPlaces)
+    #    print("Child {0}: ".format(childID), end='')
+    #    print(childrenMeetingPlaces)
+    #    print()
+    #    print("Shared Activities: ", end='')
+    #    print(sharedActivities)
+    #    # print("Total Activities: ", end='')
+    #    # print(totalActivities)
+    #    print("Percentage Shared (Total): ", end='')
+    #    print(str(percentageSharedTotal) + "%")
+    #    print("Percentage Shared (Child): ", end='')
+    #    print(str(percentageSharedChild) + "%")
+    #    print()
+    #    print()
+
+    return score
+
+
+def compareScale(value1, value2):
 
     difference = abs(value1 - value2)
 
@@ -241,3 +270,6 @@ for index, row in parents.iterrows():
 # Region End
 
 # Section End
+
+for i in range(5):
+    print(evaluateSports(0, i))
