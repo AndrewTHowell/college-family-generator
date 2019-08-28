@@ -7,12 +7,21 @@
 import pandas as pd
 
 # Used to find all permutations of allocations
-from itertools import permutations
+from itertools import permutations, chain
+
+# Used to time the running code
+import time
+
+# Used to send Facebook message to me once the code has finished
+from twilio.rest import Client
 
 # Section End
 
 
 # Section: Constants
+
+# Max Number of Children per Parent
+SLOTS = 3
 
 SUBJECTMULTIPLIER = 1
 CONTACTMULTIPLIER = 1
@@ -57,6 +66,12 @@ children.insert(0, "ID", range(0, len(children)))
 parents = parents.fillna("")
 children = children.fillna("")
 
+# Log Constants
+NUMBEROFCHILDREN = len(children.index)
+NUMBEROFPARENTS = len(parents.index)
+NUMBEROFPARENTSLOTS = SLOTS * NUMBEROFPARENTS
+
+
 # Region: Panda Structures
 
 # Parents : ID, email, name1, name2, name3, yearGoingInto, childrenAlready,
@@ -72,6 +87,8 @@ children = children.fillna("")
 
 
 # Section: Evaluation Functions
+
+# Region: Evaluation Function Stack
 
 # Returns a score for this allocation
 def evaluateAllocation(allocation):
@@ -94,20 +111,39 @@ def evaluateMatching(match):
     matchScore = 0
 
     parentID, childID = match
-    matchScore += SUBJECTMULTIPLIER * evaluateSubject(parentID, childID)
-    matchScore += CONTACTMULTIPLIER * evaluateContact(parentID, childID)
-    matchScore += MEETINGMULTIPLIER * evaluateMeeting(parentID, childID)
-    matchScore += ARTSMULTIPLIER * evaluateArts(parentID, childID)
-    matchScore += SPORTSMULTIPLIER * evaluateSports(parentID, childID)
-    matchScore += ENTERTAINMENTMULTIPLIER * (evaluateEntertainment(
-                                                            parentID, childID))
-    matchScore += NIGHTOUTMULTIPLIER * evaluateNightOut(parentID, childID)
+
+    # If childID is negative, slot is empty so no need to evaluate
+    if childID >= 0:
+        # If match has not been encountered before
+        print(parentID, childID)
+        if evaluateMatching.knownValues[parentID][childID] == -1:
+            matchScore += SUBJECTMULTIPLIER * evaluateSubject(parentID, (
+                                                              childID))
+            matchScore += CONTACTMULTIPLIER * evaluateContact(parentID, (
+                                                              childID))
+            matchScore += MEETINGMULTIPLIER * evaluateMeeting(parentID, (
+                                                              childID))
+            matchScore += ARTSMULTIPLIER * evaluateArts(parentID, (
+                                                        childID))
+            matchScore += SPORTSMULTIPLIER * evaluateSports(parentID, (
+                                                            childID))
+            matchScore += ENTERTAINMENTMULTIPLIER * (
+                                            evaluateEntertainment(parentID, (
+                                                                  childID)))
+            matchScore += NIGHTOUTMULTIPLIER * evaluateNightOut(parentID, (
+                                                                childID))
+
+            evaluateMatching.knownValues[parentID][childID] = matchScore
+
+        # If match has been encountered before
+        else:
+            matchScore = evaluateMatching.knownValues[parentID][childID]
 
     return matchScore
 
 
 def evaluateSubject(parentID, childID):
-    print("Evaluating")
+    # print("Evaluating")
 
     score = 0
 
@@ -118,8 +154,11 @@ def evaluateContact(parentID, childID):
 
     score = 0
 
+# print("Evaluating Contact with Parent {0} and Child {1}".format(parentID, (
+#                                                               childID)))
+
     # Gets Contact info of Parent
-    parentContact = parents.loc[parentID]["contactAmount"]
+    parentContact = parents.loc[parentID//SLOTS]["contactAmount"]
     childrenContact = children.loc[childID]["contactAmount"]
 
     score += compareScale(parentContact, childrenContact)
@@ -130,7 +169,7 @@ def evaluateContact(parentID, childID):
 def evaluateMeeting(parentID, childID):
 
     # Gets Meeting Places info of Parent
-    parentActivities = parents.loc[parentID]["meetingPlaces"]
+    parentActivities = parents.loc[parentID//SLOTS]["meetingPlaces"]
     childrenActivities = children.loc[childID]["meetingPlaces"]
 
     score = compareActivities(parentActivities, childrenActivities)
@@ -141,7 +180,7 @@ def evaluateMeeting(parentID, childID):
 def evaluateArts(parentID, childID):
 
     # Gets Arts info of Parent
-    parentActivities = parents.loc[parentID]["arts"]
+    parentActivities = parents.loc[parentID//SLOTS]["arts"]
     childrenActivities = children.loc[childID]["arts"]
 
     score = compareActivities(parentActivities, childrenActivities)
@@ -152,7 +191,7 @@ def evaluateArts(parentID, childID):
 def evaluateSports(parentID, childID):
 
     # Gets Sports info of Parent
-    parentActivities = parents.loc[parentID]["sports"]
+    parentActivities = parents.loc[parentID//SLOTS]["sports"]
     childrenActivities = children.loc[childID]["sports"]
 
     score = compareActivities(parentActivities, childrenActivities)
@@ -163,7 +202,7 @@ def evaluateSports(parentID, childID):
 def evaluateEntertainment(parentID, childID):
 
     # Gets Entertainment info of Parent
-    parentActivities = parents.loc[parentID]["entertainment"]
+    parentActivities = parents.loc[parentID//SLOTS]["entertainment"]
     childrenActivities = children.loc[childID]["entertainment"]
 
     score = compareActivities(parentActivities, childrenActivities)
@@ -176,13 +215,30 @@ def evaluateNightOut(parentID, childID):
     score = 0
 
     # Gets Contact info of Parent
-    parentContact = parents.loc[parentID]["contactAmount"]
+    parentContact = parents.loc[parentID//SLOTS]["contactAmount"]
     childrenContact = children.loc[childID]["contactAmount"]
 
     score += compareScale(parentContact, childrenContact)
 
     return score
 
+
+# Division: Initialising Static Function Variables
+
+# Initialising (parent x child) array to hold match scores
+evaluateMatching.knownValues = []
+for parent in range(NUMBEROFPARENTSLOTS):
+    parent = []
+    for child in range(NUMBEROFCHILDREN):
+        parent.append(-1)
+    evaluateMatching.knownValues.append(parent)
+
+# Division End
+
+# Region End
+
+
+# Region: Comparator and Format Functions
 
 # Formats cells containing Activities ready for compareActivities()
 def formatCell(array):
@@ -221,7 +277,7 @@ def compareActivities(parentActivities, childActivities):
     # Convert percentage to score out of 10, to 1 decimal place
     score = round(percentageSharedChild / 10, 1)
 
-    #    print("Parent {0}  with Child {1}".format(parentID, childID))#
+    #    print("Parent {0}  with Child {1}".format(parentID, childID))
     #    print()
     #    print("Parent {0}: ".format(parentID), end='')
     #    print(parentMeetingPlaces)
@@ -263,6 +319,7 @@ def compareScale(value1, value2):
     else:
         return 0
 
+# Region End
 
 # Section End
 
@@ -278,15 +335,15 @@ allocation = []
 # Add Parents to allocation
 # For each parent in the panda
 for index, row in parents.iterrows():
-    # Each Parent has 3 child 'slots', so add 3 arrays
-    for i in range(3):
+    # Each Parent has SLOTS child 'slots', so add SLOTS arrays
+    for i in range(SLOTS):
         allocation.append([row["ID"], -1])
 
 # Region: Allocation Structure
 
 # Allocation = [ [ParentID, ChildID], [ParentID, ChildID], ... ]
 
-# Where ParentID repeats 3 times (3 child slots)
+# Where ParentID repeats SLOTS times (SLOTS child slots)
 # [
 #   [0, -1], [0, -1], [0, -1],
 #   [1, -1], [1, -1], [1, -1],
@@ -298,27 +355,70 @@ for index, row in parents.iterrows():
 
 # Section End
 
+
 # Section: Main Functions
 
+
 # Evaluate every permutation of allocations, finding the highest scoring
+def main():
+    optimumAllocation = []
+    optimumAllocationScore = 0
 
-optimumAllocation = []
-optimumAllocationScore = 0
+    # Get range of all children IDs
+    childIDRange = range(NUMBEROFCHILDREN)
 
-# Get number of parent slots available
-numberOfParents = len(parents.index)
-numberofParentSlots = 3 * numberOfParents
+    numberOfEmptySlots = NUMBEROFPARENTSLOTS - NUMBEROFCHILDREN
+    nullIDRange = range(-1, -(numberOfEmptySlots + 1), -1)
 
-# Get range of all children IDs
-numberOfChildren = len(children.index)
-childIDRange = range(numberOfChildren)
+    # print(NUMBEROFCHILDREN, numberOfEmptySlots)
+    # print(NUMBEROFPARENTSLOTS)
 
-allAllocations = permutations(childIDRange, numberofParentSlots)
+    perms = permutations(chain(childIDRange, nullIDRange))
+    # perms = [(0, 2, 1, -1, -2, -3)]
 
-for i in list(allAllocations):
-    print(i)
+    startTime = time.time()
+
+    i = 0
+    for perm in perms:
+        allocation = []
+        for slotID in range(NUMBEROFPARENTSLOTS):
+            # print(slotID, perm[slotID])
+            allocation.append([slotID, perm[slotID]])
+        allocationScore = evaluateAllocation(allocation)
+
+        # print(perm)
+        # print(allocationScore)
+
+        if allocationScore > optimumAllocationScore:
+            optimumAllocation = allocation
+            optimumAllocationScore = allocationScore
+
+        # if i == 200:
+        #     break
+        # i += 1
+
+    timeElapsed = time.time() - startTime
+
+    print("Optimum Allocation: {0}".format(optimumAllocation))
+    print("Optimum Allocation Score: {0:.1f}".format(optimumAllocationScore))
+    print("{0:02}:{1:02}".format(round(timeElapsed // 60), (
+                                 round(timeElapsed % 60))))
 
 # Section End
 
-# FIGURE OUT HOW TO CREATE ALLOCATION PERMUTATIONS
+
+main()
+
+'''account_sid = 'AC739dd29454683bd010cf6d05f6a9aa9f'
+auth_token = 'c03972aa1cd7455b509e54693f53c26b'
+client = Client(account_sid, auth_token)
+
+message = client.messages \\
+                .create(
+                     body="Code Finished",
+                     from_='+441686207042',
+                     to='+447792228849'
+                 )
+print(message.sid)'''
+
 # ADD MEMOIZATION to all evaluation functions (bar evaluateAllocation)
