@@ -115,7 +115,7 @@ def evaluateMatching(match):
     # If childID is negative, slot is empty so no need to evaluate
     if childID >= 0:
         # If match has not been encountered before
-        print(parentID, childID)
+        # print(parentID, childID)
         if evaluateMatching.knownValues[parentID][childID] == -1:
             matchScore += SUBJECTMULTIPLIER * evaluateSubject(parentID, (
                                                               childID))
