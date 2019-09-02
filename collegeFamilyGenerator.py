@@ -23,13 +23,63 @@ from twilio.rest import Client
 # Max Number of Children per Parent
 SLOTS = 3
 
-SUBJECTMULTIPLIER = 1
-CONTACTMULTIPLIER = 1
-MEETINGMULTIPLIER = 1
-ARTSMULTIPLIER = 1
-SPORTSMULTIPLIER = 1
-ENTERTAINMENTMULTIPLIER = 1
-NIGHTOUTMULTIPLIER = 1
+MULTIPLIERS = {"subjects":       1,
+               "contactAmount":  1,
+               "meetingPlaces":  1,
+               "arts":           1,
+               "sports":         1,
+               "entertainment":  1,
+               "nightOut":       1}
+
+POSSIBLEVALUES = {"subjects":       [],
+                  "contactAmount":  range(1, 6),
+
+                  "meetingPlaces":  ["Clubbing / Bars",
+                                     "Pub",
+                                     "Sit Down Meal",
+                                     "Cafe",
+                                     "Cinema",
+                                     "Theatre",
+                                     "Takeaway in front of a TV",
+                                     "Prefer not to meet up"],
+
+                  "arts":           ["Acting",
+                                     "Bands",
+                                     "Dancing",
+                                     "Singing"],
+
+                  "sports":         ["Athletics",
+                                     "Badminton",
+                                     "Basketball",
+                                     "Cheerleading",
+                                     "Cricket",
+                                     "Cycling",
+                                     "Dance",
+                                     "Darts",
+                                     "Football",
+                                     "Gymnastics",
+                                     "Hockey",
+                                     "Horse Riding",
+                                     "Lacrosse",
+                                     "Martial Arts",
+                                     "Netball",
+                                     "Pool",
+                                     "Rounders",
+                                     "Rowing",
+                                     "Rugby",
+                                     "Squash",
+                                     "Swimming",
+                                     "Table Tennis",
+                                     "Tennis",
+                                     "Ultimate Frisbee",
+                                     "Volleyball"],
+
+                  "entertainment":  ["Films",
+                                     "Gaming",
+                                     "Music",
+                                     "TV Shows"],
+
+                  "nightOut":       range(1, 6)}
 
 # Section End
 
@@ -110,128 +160,120 @@ def evaluateMatching(match):
 
     matchScore = 0
 
+    # If match has not been encountered before
     parentID, childID = match
 
     # If childID is negative, slot is empty so no need to evaluate
     if childID >= 0:
-        # If match has not been encountered before
-        # print(parentID, childID)
-        if evaluateMatching.knownValues[parentID][childID] == -1:
-            matchScore += SUBJECTMULTIPLIER * evaluateSubject(parentID, (
-                                                              childID))
-            matchScore += CONTACTMULTIPLIER * evaluateContact(parentID, (
-                                                              childID))
-            matchScore += MEETINGMULTIPLIER * evaluateMeeting(parentID, (
-                                                              childID))
-            matchScore += ARTSMULTIPLIER * evaluateArts(parentID, (
-                                                        childID))
-            matchScore += SPORTSMULTIPLIER * evaluateSports(parentID, (
-                                                            childID))
-            matchScore += ENTERTAINMENTMULTIPLIER * (
-                                            evaluateEntertainment(parentID, (
-                                                                  childID)))
-            matchScore += NIGHTOUTMULTIPLIER * evaluateNightOut(parentID, (
-                                                                childID))
 
-            evaluateMatching.knownValues[parentID][childID] = matchScore
+        if evaluateMatching.values["matches"][parentID][childID] == -1:
+            matchScore += (MULTIPLIERS["subject"]
+                           * evaluateSubject(parentID, childID))
+
+            for attr in ["meetingPlaces", "arts", "sports", "entertainment"]:
+                matchScore += (MULTIPLIERS[attr]
+                               * evaluateActivites(parentID, childID, attr))
+
+            for attr in ["contactAmount", "nightOut"]:
+                matchScore += (MULTIPLIERS[attr]
+                               * evaluateByScale(parentID, childID, attr))
+
+            evaluateMatching.values["matches"][parentID][childID] = matchScore
 
         # If match has been encountered before
         else:
-            matchScore = evaluateMatching.knownValues[parentID][childID]
+            matchScore = evaluateMatching.values["matches"][parentID][childID]
 
     return matchScore
 
 
 def evaluateSubject(parentID, childID):
-    # print("Evaluating")
 
-    score = 0
+    print("Evaluating Subject")
 
-    return score
+    attrID = "subjects"
 
+    # Gets activities info of Parent
+    pSubjects = parents.loc[parentID//SLOTS][attrID]
+    cSubjects = children.loc[childID][attrID]
 
-def evaluateContact(parentID, childID):
+    # Format cells -> remove spaces, split into list of subjects, become set
+    pSubjects = formatCell(pSubjects)
+    cSubjects = formatCell(cSubjects)
 
-    score = 0
+    # If subjects have not been encountered before
+    if evaluateMatching.values[attrID][pSubjects][cSubjects] == -1:
 
-# print("Evaluating Contact with Parent {0} and Child {1}".format(parentID, (
-#                                                               childID)))
+        score = 0
 
-    # Gets Contact info of Parent
-    parentContact = parents.loc[parentID//SLOTS]["contactAmount"]
-    childrenContact = children.loc[childID]["contactAmount"]
+        # Subject evaluation system ###########################################
 
-    score += compareScale(parentContact, childrenContact)
+        evaluateMatching.values[attrID][pSubjects][cSubjects] = score
 
-    return score
-
-
-def evaluateMeeting(parentID, childID):
-
-    # Gets Meeting Places info of Parent
-    parentActivities = parents.loc[parentID//SLOTS]["meetingPlaces"]
-    childrenActivities = children.loc[childID]["meetingPlaces"]
-
-    score = compareActivities(parentActivities, childrenActivities)
+    # If subjects have been encountered before
+    else:
+        score = evaluateMatching.values[attrID][pSubjects][cSubjects]
 
     return score
 
 
-def evaluateArts(parentID, childID):
+def evaluateByScale(parentID, childID, attr):
 
-    # Gets Arts info of Parent
-    parentActivities = parents.loc[parentID//SLOTS]["arts"]
-    childrenActivities = children.loc[childID]["arts"]
+    # Gets values
+    parentValue = parents.loc[parentID//SLOTS][attr]
+    childrenValue = children.loc[childID][attr]
 
-    score = compareActivities(parentActivities, childrenActivities)
-
-    return score
-
-
-def evaluateSports(parentID, childID):
-
-    # Gets Sports info of Parent
-    parentActivities = parents.loc[parentID//SLOTS]["sports"]
-    childrenActivities = children.loc[childID]["sports"]
-
-    score = compareActivities(parentActivities, childrenActivities)
+    score = compareScale(parentValue, childrenValue)
 
     return score
 
 
-def evaluateEntertainment(parentID, childID):
+def evaluateActivities(parentID, childID, attrID):
 
-    # Gets Entertainment info of Parent
-    parentActivities = parents.loc[parentID//SLOTS]["entertainment"]
-    childrenActivities = children.loc[childID]["entertainment"]
+    print("Evaluating Activity")
 
-    score = compareActivities(parentActivities, childrenActivities)
+    # Gets activities info of Parent
+    pActivities = parents.loc[parentID//SLOTS][attrID]
+    cActivities = children.loc[childID][attrID]
 
-    return score
+    # Format cells -> remove spaces, split into list of activities, become set
+    pActivities = formatCell(pActivities)
+    cActivities = formatCell(cActivities)
 
+    # If activities have not been encountered before
+    if evaluateMatching.values[attrID][pActivities][cActivities] == -1:
+        score = compareActivities(pActivities, cActivities)
 
-def evaluateNightOut(parentID, childID):
+        evaluateMatching.values[attrID][pActivities][cActivities] = score
 
-    score = 0
-
-    # Gets Contact info of Parent
-    parentContact = parents.loc[parentID//SLOTS]["contactAmount"]
-    childrenContact = children.loc[childID]["contactAmount"]
-
-    score += compareScale(parentContact, childrenContact)
+    # If activities have been encountered before
+    else:
+        score = evaluateMatching.values[attrID][pActivities][cActivities]
 
     return score
 
 
 # Division: Initialising Static Function Variables
 
-# Initialising (parent x child) array to hold match scores
-evaluateMatching.knownValues = []
+# Need to have dynamic array size for each attribute ##########################
+
+evaluateMatching.values = {}
+
+# Initialising (parent x child) array to hold previous match scores
+evaluateMatching.values["matches"] = []
 for parent in range(NUMBEROFPARENTSLOTS):
     parent = []
     for child in range(NUMBEROFCHILDREN):
         parent.append(-1)
-    evaluateMatching.knownValues.append(parent)
+evaluateMatching.values["matches"].append(parent)
+
+# For each Activity attribute, initiliase a dictionary
+# Structure: {attr: {parentActivities: childActivities}}
+for attr in POSSIBLEVALUES.keys():
+    # If value is a list (of activities), intiliase a dict
+    if isinstance(POSSIBLEVALUES[attr], list):
+        evaluateMatching.values[attr] = {}
+        # print("Initialising for {0}".format(attr))
 
 # Division End
 
@@ -259,10 +301,6 @@ def formatCell(array):
 # Compares parent and child lists of activities
 # Scores them based on the percentage of Child activities shared by the Parents
 def compareActivities(parentActivities, childActivities):
-
-    # Format cells -> remove spaces, split into list of activities, become set
-    parentActivities = formatCell(parentActivities)
-    childActivities = formatCell(childActivities)
 
     # Percentage of child's activities shared by parents calculated
     sharedActivities = parentActivities.intersection(childActivities)
@@ -422,3 +460,6 @@ message = client.messages \\
 print(message.sid)'''
 
 # ADD MEMOIZATION to all evaluation functions (bar evaluateAllocation)
+# Add Subject Evaluation
+# Add Parent-specific evaluation
+# Integrate Simulated Annealing and Test
