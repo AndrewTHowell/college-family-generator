@@ -23,63 +23,72 @@ from twilio.rest import Client
 # Max Number of Children per Parent
 SLOTS = 3
 
-MULTIPLIERS = {"subjects":       1,
-               "contactAmount":  1,
-               "meetingPlaces":  1,
-               "arts":           1,
-               "sports":         1,
-               "entertainment":  1,
-               "nightOut":       1}
+MULTIPLIERS = {"yearGoingInto":   1,
+               "childrenAlready": 1,
+               "subjects":        1,
+               "contactAmount":   1,
+               "meetingPlaces":   1,
+               "arts":            1,
+               "sports":          1,
+               "entertainment":   1,
+               "nightOut":        1}
 
-POSSIBLEVALUES = {"subjects":       [],
-                  "contactAmount":  range(1, 6),
+POSSIBLEVALUES = {"yearGoingInto":   ["Year 2",
+                                      "Year 3",
+                                      "Year 4"],
 
-                  "meetingPlaces":  ["Clubbing / Bars",
-                                     "Pub",
-                                     "Sit Down Meal",
-                                     "Cafe",
-                                     "Cinema",
-                                     "Theatre",
-                                     "Takeaway in front of a TV",
-                                     "Prefer not to meet up"],
+                  "childrenAlready": ["Yes",
+                                      "No"],
 
-                  "arts":           ["Acting",
-                                     "Bands",
-                                     "Dancing",
-                                     "Singing"],
+                  "subjects":        [],
+                  "contactAmount":   range(1, 6),
 
-                  "sports":         ["Athletics",
-                                     "Badminton",
-                                     "Basketball",
-                                     "Cheerleading",
-                                     "Cricket",
-                                     "Cycling",
-                                     "Dance",
-                                     "Darts",
-                                     "Football",
-                                     "Gymnastics",
-                                     "Hockey",
-                                     "Horse Riding",
-                                     "Lacrosse",
-                                     "Martial Arts",
-                                     "Netball",
-                                     "Pool",
-                                     "Rounders",
-                                     "Rowing",
-                                     "Rugby",
-                                     "Squash",
-                                     "Swimming",
-                                     "Table Tennis",
-                                     "Tennis",
-                                     "Ultimate Frisbee",
-                                     "Volleyball"],
+                  "meetingPlaces":   ["Clubbing / Bars",
+                                      "Pub",
+                                      "Sit Down Meal",
+                                      "Cafe",
+                                      "Cinema",
+                                      "Theatre",
+                                      "Takeaway in front of a TV",
+                                      "Prefer not to meet up"],
 
-                  "entertainment":  ["Films",
-                                     "Gaming",
-                                     "Music",
-                                     "TV Shows"],
+                  "arts":            ["Acting",
+                                      "Bands",
+                                      "Dancing",
+                                      "Singing"],
 
-                  "nightOut":       range(1, 6)}
+                  "sports":          ["Athletics",
+                                      "Badminton",
+                                      "Basketball",
+                                      "Cheerleading",
+                                      "Cricket",
+                                      "Cycling",
+                                      "Dance",
+                                      "Darts",
+                                      "Football",
+                                      "Gymnastics",
+                                      "Hockey",
+                                      "Horse Riding",
+                                      "Lacrosse",
+                                      "Martial Arts",
+                                      "Netball",
+                                      "Pool",
+                                      "Rounders",
+                                      "Rowing",
+                                      "Rugby",
+                                      "Squash",
+                                      "Swimming",
+                                      "Table Tennis",
+                                      "Tennis",
+                                      "Ultimate Frisbee",
+                                      "Volleyball"],
+
+                  "entertainment":   ["Films",
+                                      "Gaming",
+                                      "Music",
+                                      "TV Shows"],
+
+                  "nightOut":        range(1, 6)}
 
 # Section End
 
@@ -146,11 +155,26 @@ def evaluateAllocation(allocation):
     allocationScore = 0
 
     # Collect scores for each match
-    for parentChildMatching in allocation:
-        allocationScore += evaluateMatching(parentChildMatching)
+    for match in allocation:
+        allocationScore += evaluateMatching(match)
 
-    # Evaluate parents -> year going into, already have children
-    ###
+        # Evaluate parents -> year going into, already have children
+
+        # Evaluate Year Going Into
+        yearGoingInto = parents.loc[match[0]//SLOTS]["yearGoingInto"]
+        if yearGoingInto == "Year 2":
+            allocationScore += MULTIPLIERS["yearGoingInto"] * 10
+        elif yearGoingInto == "Year 3":
+            allocationScore += MULTIPLIERS["yearGoingInto"] * 0
+        elif yearGoingInto == "Year 4":
+            allocationScore += MULTIPLIERS["yearGoingInto"] * -10
+
+        # Evaluate Children Already
+        childrenAlready = parents.loc[match[0]//SLOTS]["childrenAlready"]
+        if childrenAlready == "Yes":
+            allocationScore += MULTIPLIERS["childrenAlready"] * -10
+        elif childrenAlready == "No":
+            allocationScore += MULTIPLIERS["childrenAlready"] * 10
 
     return allocationScore
 
@@ -464,5 +488,4 @@ message = client.messages \\
 print(message.sid)'''
 
 # ADD MEMOIZATION to all evaluation functions (bar evaluateAllocation)
-# Add Parent-specific evaluation
 # Integrate Simulated Annealing and Test
