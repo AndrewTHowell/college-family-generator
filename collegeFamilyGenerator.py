@@ -258,7 +258,7 @@ def evaluateByScale(parentID, childID, attr):
 
 def evaluateActivities(parentID, childID, attrID):
 
-    print("Evaluating Activity")
+    # print("Evaluating Activity")
 
     # Gets activities info of Parent
     pActivities = parents.loc[parentID//SLOTS][attrID]
@@ -268,7 +268,9 @@ def evaluateActivities(parentID, childID, attrID):
     pActivities = formatCell(pActivities)
     cActivities = formatCell(cActivities)
 
-    # If activities have not been encountered before
+    score = compareActivities(pActivities, cActivities)
+
+    '''# If activities have not been encountered before
     if evaluateMatching.values[attrID][pActivities][cActivities] == -1:
         score = compareActivities(pActivities, cActivities)
 
@@ -276,7 +278,7 @@ def evaluateActivities(parentID, childID, attrID):
 
     # If activities have been encountered before
     else:
-        score = evaluateMatching.values[attrID][pActivities][cActivities]
+        score = evaluateMatching.values[attrID][pActivities][cActivities]'''
 
     return score
 
@@ -295,13 +297,13 @@ for parent in range(NUMBEROFPARENTSLOTS):
         parent.append(-1)
 evaluateMatching.values["matches"].append(parent)
 
-# For each Activity attribute, initiliase a dictionary
+'''# For each Activity attribute, initialise a dictionary
 # Structure: {attr: {parentActivities: childActivities}}
 for attr in POSSIBLEVALUES.keys():
-    # If value is a list (of activities), intiliase a dict
+    # If value is a list (of activities), Initialise a dict
     if isinstance(POSSIBLEVALUES[attr], list):
         evaluateMatching.values[attr] = {}
-        # print("Initialising for {0}".format(attr))
+        # print("Initialising for {0}".format(attr))'''
 
 # Division End
 
