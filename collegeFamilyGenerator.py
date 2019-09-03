@@ -167,10 +167,14 @@ def evaluateMatching(match):
     if childID >= 0:
 
         if evaluateMatching.values["matches"][parentID][childID] == -1:
-            matchScore += (MULTIPLIERS["subject"]
-                           * evaluateSubject(parentID, childID))
+            # matchScore += (MULTIPLIERS["subject"]
+            #                * evaluateSubject(parentID, childID))
 
-            for attr in ["meetingPlaces", "arts", "sports", "entertainment"]:
+            for attr in ["subject",
+                         "meetingPlaces",
+                         "arts",
+                         "sports",
+                         "entertainment"]:
                 matchScore += (MULTIPLIERS[attr]
                                * evaluateActivites(parentID, childID, attr))
 
@@ -187,7 +191,7 @@ def evaluateMatching(match):
     return matchScore
 
 
-def evaluateSubject(parentID, childID):
+'''def evaluateSubject(parentID, childID):
 
     print("Evaluating Subject")
 
@@ -214,7 +218,7 @@ def evaluateSubject(parentID, childID):
     else:
         score = evaluateMatching.values[attrID][pSubjects][cSubjects]
 
-    return score
+    return score'''
 
 
 def evaluateByScale(parentID, childID, attr):
@@ -460,6 +464,5 @@ message = client.messages \\
 print(message.sid)'''
 
 # ADD MEMOIZATION to all evaluation functions (bar evaluateAllocation)
-# Add Subject Evaluation
 # Add Parent-specific evaluation
 # Integrate Simulated Annealing and Test
