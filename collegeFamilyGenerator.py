@@ -97,7 +97,7 @@ POSSIBLEVALUES = {"yearGoingInto":   ["Year 2",
 
 # Location of Folder containing CSV Files
 CSVLocation = ("D:\\howel\\OneDrive - Durham University\\Exec\\VP Development"
-               "\\College Families\\college-family-generator\\Test Data")
+               "\\College Families\\college-family-generator\\Import Files")
 
 global parents
 global children
@@ -112,7 +112,7 @@ parents = pd.read_csv("{0}\\Parents.csv".format(CSVLocation), skiprows=1,
 
 # Create the Parents Panda, extracting info from CSV files
 children = pd.read_csv("{0}\\Children.csv".format(CSVLocation), skiprows=1,
-                       names=["email", "name", "subject",
+                       names=["email", "name", "subjects",
                               "contactAmount", "meetingPlaces",
                               "arts", "sports", "entertainment", "nightOut"],
                        usecols=range(1, 10))
@@ -189,18 +189,17 @@ def evaluateMatching(match):
 
     # If childID is negative, slot is empty so no need to evaluate
     if childID >= 0:
-
         if evaluateMatching.values["matches"][parentID][childID] == -1:
             # matchScore += (MULTIPLIERS["subject"]
             #                * evaluateSubject(parentID, childID))
 
-            for attr in ["subject",
+            for attr in ["subjects",
                          "meetingPlaces",
                          "arts",
                          "sports",
                          "entertainment"]:
                 matchScore += (MULTIPLIERS[attr]
-                               * evaluateActivites(parentID, childID, attr))
+                               * evaluateActivities(parentID, childID, attr))
 
             for attr in ["contactAmount", "nightOut"]:
                 matchScore += (MULTIPLIERS[attr]
@@ -292,10 +291,12 @@ evaluateMatching.values = {}
 # Initialising (parent x child) array to hold previous match scores
 evaluateMatching.values["matches"] = []
 for parent in range(NUMBEROFPARENTSLOTS):
-    parent = []
+    parentSlot = []
     for child in range(NUMBEROFCHILDREN):
-        parent.append(-1)
-evaluateMatching.values["matches"].append(parent)
+        parentSlot.append(-1)
+    evaluateMatching.values["matches"].append(parentSlot)
+
+# print(evaluateMatching.values["matches"])
 
 '''# For each Activity attribute, initialise a dictionary
 # Structure: {attr: {parentActivities: childActivities}}
@@ -372,6 +373,8 @@ def compareActivities(parentActivities, childActivities):
 def compareScale(value1, value2):
 
     # Find absolute (positive) difference between two scale values
+    # print(value1, type(value1))
+    # print(value2, type(value2))
     difference = abs(value1 - value2)
 
     # print(value1, value2)
@@ -461,9 +464,9 @@ def main():
             optimumAllocation = allocation
             optimumAllocationScore = allocationScore
 
-        # if i == 200:
-        #     break
-        # i += 1
+        if i == 500:
+            break
+        i += 1
 
     timeElapsed = time.time() - startTime
 
@@ -474,6 +477,10 @@ def main():
 
 # Section End
 
+
+print("Make sure Sam Attfield Parents for Jack Peachey")
+print("""I.E. remove Jack from Children.csv
+         and add him to Samuel Attfield's Family""")
 
 main()
 
@@ -489,5 +496,4 @@ message = client.messages \\
                  )
 print(message.sid)'''
 
-# ADD MEMOIZATION to all evaluation functions (bar evaluateAllocation)
 # Integrate Simulated Annealing and Test
