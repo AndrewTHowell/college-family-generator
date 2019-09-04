@@ -1,5 +1,5 @@
 
-# # # # # # # # # # # # # # College Family Generator # # # # # # # # # # # # #
+# # # # # # # # # # # # # College Family Generator # # # # # # # # # # # # #
 
 # Section: Importing Modules
 
@@ -14,6 +14,9 @@ import time
 
 # Used to send Facebook message to me once the code has finished
 from twilio.rest import Client
+
+# Used to email me when the generator is finished
+from Emailer import Emailer
 
 # Section End
 
@@ -479,21 +482,13 @@ def main():
 
 
 print("Make sure Sam Attfield Parents for Jack Peachey")
-print("""I.E. remove Jack from Children.csv
-         and add him to Samuel Attfield's Family""")
+print("I.E. remove Jack from Children.csv"
+      " and add him to Samuel Attfield's Family")
 
-main()
+# Testing Email call
+emailer = Emailer()
+emailer.send()
 
-'''account_sid = 'AC739dd29454683bd010cf6d05f6a9aa9f'
-auth_token = 'c03972aa1cd7455b509e54693f53c26b'
-client = Client(account_sid, auth_token)
-
-message = client.messages \\
-                .create(
-                     body="Code Finished",
-                     from_='+441686207042',
-                     to='+447792228849'
-                 )
-print(message.sid)'''
+# main()
 
 # Integrate Simulated Annealing and Test
