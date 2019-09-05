@@ -8,25 +8,22 @@ class Emailer():
     def __init__(self):
         self.server = smtplib.SMTP('smtp.gmail.com', 587)
 
-        fromaddr = "howelldrew99@gmail.com"
-        toaddr = "howelldrew99@gmail.com"
+        self.fromAddress = "howelldrew99@gmail.com"
 
         # Next, log in to the server
         self.server.starttls()
-        self.server.login(fromaddr, "mpnlqxibgjepgkbf")
+        self.server.login(self.fromAddress, "mpnlqxibgjepgkbf")
 
+    def send(self, toAddress, subject, body):
         self.msg = EmailMessage()
 
-        self.msg['From'] = fromaddr
-        self.msg['To'] = toaddr
-        self.msg['Subject'] = "College Family Generator Finished"
+        self.msg['From'] = self.fromAddress
+        self.msg['To'] = toAddress
+        self.msg['Subject'] = subject
 
-        body = "Your College Family Generator has finished."
         self.msg.set_content(body)
 
-    def send(self):
         self.server.send_message(self.msg)
 
-
-emailer = Emailer()
-emailer.send()
+# emailer = Emailer()
+# emailer.send()

@@ -485,10 +485,12 @@ print("Make sure Sam Attfield Parents for Jack Peachey")
 print("I.E. remove Jack from Children.csv"
       " and add him to Samuel Attfield's Family")
 
-# Testing Email call
-emailer = Emailer()
-emailer.send()
-
 # main()
+
+# Send email to self, notifiying me that the code has finished
+emailer = Emailer()
+emailer.send("howelldrew99@gmail.com",
+             "Code Finished",
+             "College Family Generator has finished")
 
 # Integrate Simulated Annealing and Test
