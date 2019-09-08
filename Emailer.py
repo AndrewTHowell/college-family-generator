@@ -8,11 +8,13 @@ class Emailer():
     def __init__(self):
         self.server = smtplib.SMTP('smtp.gmail.com', 587)
 
-        self.fromAddress = "howelldrew99@gmail.com"
-
-        # Next, log in to the server
         self.server.starttls()
-        self.server.login(self.fromAddress, "mpnlqxibgjepgkbf")
+
+        self.fromAddress = "vmcollegefamilyallocation@gmail.com"
+        self.server.login(self.fromAddress, "2tF9aD*264^IjVcf")
+
+        # self.fromAddress = "howelldrew99@gmail.com"
+        # self.server.login(self.fromAddress, "xtzsfzbtobhuxywt")
 
     def send(self, toAddress, subject, body):
         self.msg = EmailMessage()
@@ -25,5 +27,8 @@ class Emailer():
 
         self.server.send_message(self.msg)
 
-# emailer = Emailer()
-# emailer.send()
+
+emailer = Emailer()
+emailer.send("vp@mildert.co.uk",
+             "Test",
+             "Test Message")
