@@ -481,16 +481,37 @@ def main():
 # Section End
 
 
+def emailAllocation(allocation):
+
+    i = 0
+    while i < len(allocation):
+        children = []
+        for j in range(SLOTS):
+            [parentIDSlot, childID] = allocation[i+j]
+            children.append(childID)
+
+        parentID = parentIDSlot // 3
+        print(parentID, children)
+
+        # Get shared interests
+
+        i += SLOTS
+
+
 print("Make sure Sam Attfield Parents for Jack Peachey")
 print("I.E. remove Jack from Children.csv"
       " and add him to Samuel Attfield's Family")
 
+emailAllocation([[0, 0], [1, 2], [2, 3], [3, 1], [4, 4], [5, -1]])
+
 # main()
 
 # Send email to self, notifiying me that the code has finished
-emailer = Emailer()
-emailer.send("howelldrew99@gmail.com",
-             "Code Finished",
-             "College Family Generator has finished")
+# emailer = Emailer()
+# emailer.send("howelldrew99@gmail.com",
+#              "Code Finished",
+#              "College Family Generator has finished")
 
 # Integrate Simulated Annealing and Test
+
+# Evaluate child interest similarities
