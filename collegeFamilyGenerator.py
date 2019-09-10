@@ -483,17 +483,51 @@ def main():
 
 def emailAllocation(allocation):
 
+    emailer = Emailer()
+
     i = 0
     while i < len(allocation):
+        # Extract parentID and childIDs
         children = []
         for j in range(SLOTS):
             [parentIDSlot, childID] = allocation[i+j]
             children.append(childID)
-
         parentID = parentIDSlot // 3
+
         print(parentID, children)
 
+        assignedChildren = False
+        for child in children:
+            if child > 0:
+                assignedChildren = True
+
+        parentNames = [parents.loc[parentID]["name1"],
+                       parents.loc[parentID]["name2"],
+                       parents.loc[parentID]["name3"]]
+
+        print(parentNames)
+
+        message = "Hi \n\n"
+
+        if not assignedChildren:
+            message += ("Unfortunately, you weren't assigned any children this"
+                        " time. This was due to other being more compatible"
+                        " matchings")
+
         # Get shared interests
+        for attribute in ["subjects",
+                          "meetingPlaces",
+                          "arts",
+                          "sports",
+                          "entertainment",
+                          "nightOut"]:
+
+            x = ""
+
+        # emailer.send(parents.loc[parentID]["email"],
+        # emailer.send("howelldrew99@gmail.com",
+        #              "College Family Allocation",
+        #              message)
 
         i += SLOTS
 
