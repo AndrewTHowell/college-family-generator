@@ -513,19 +513,23 @@ def emailAllocation(allocation):
                                                         parentNames[1],
                                                         parentNames[2])
 
-        for childID in childIDs:
-            if childID < 0:
-                childIDs.remove(childID)
+        childIDs = [child for child in childIDs if child >= 0]
 
         if len(childIDs) == 0:
             message += ("Unfortunately, you weren't assigned any children this"
-                        " time. This was due to others being more compatible"
-                        " matchings to the Freshers'.\n\n"
-                        "However, thank you so much for volunteering.\n\n")
+                        " year.\n")
+            message += ("Matchings were based on who was most compatible, and"
+                        " so some parents received multiple children and some"
+                        " received none. I tried to make sure everyone"
+                        " received children, but sadly I was unsuccessful."
+                        "\n\n")
+            message += ("However, thank you so much for volunteering to be a "
+                        "College Parent.\n")
 
         else:
-            message += ("Thank you so much for volunteering, here's some"
-                        " information on your new children.\n\n")
+            message += ("Thank you so much for volunteering to be a College"
+                        " Parent, here's some information on your new"
+                        " children.\n")
 
             parentAttributes = {}
             # For each attribute, get parent attributes
@@ -539,8 +543,11 @@ def emailAllocation(allocation):
 
                 parentAttributes[attribute] = formatForShared(string)
 
+            childNum = 1
             for childID in childIDs:
-                message += "Name: {0}\nEmail Address: {1}\n".format(
+                message += "\nChild {0}".format(childNum)
+                childNum += 1
+                message += "\nName: {0}\nEmail Address: {1}\n".format(
                                                 children.loc[childID]["name"],
                                                 children.loc[childID]["email"])
 
@@ -564,8 +571,26 @@ def emailAllocation(allocation):
                                                 attribute[0].upper()
                                                 + attribute[1:]))
 
-                        message += "Your common {0} are: ".format(attr)
+                        message += ("Your common {0} are: {1}\n"
+                                    .format(attr.lower(),
+                                            ", ".join(list(common))))
 
+            message += ("\nPlease contact your children as soon as possible"
+                        " and introduce yourselves.\n\n")
+
+            message += ("There will be a Parent's 'Informal' event held on"
+                        " Friday, 11th October. Please make sure you encourage"
+                        " your Freshers to go, it should be a really fun"
+                        " evening and will allow you to get to know each other"
+                        " better.\n")
+
+        message += ("\n*** This is an automated email, sent out by your"
+                    " VP Development. If you have any questions or issues,"
+                    " please speak to him directly at vp@mildert.co.uk ***\n")
+
+        message += ("\nKind Regards,\nAndrew's Computer :)")
+
+        print("Message:")
         print(message)
 
         # emailer.send(parents.loc[parentID]["email"],
@@ -596,8 +621,9 @@ def formatForShared(string):
 print("Make sure Sam Attfield Parents for Jack Peachey")
 print("I.E. remove Jack from Children.csv"
       " and add him to Samuel Attfield's Family")
+print("If emailing out, remember to email Sam that he also has Jack")
 
-emailAllocation([[0, 0], [1, 2], [2, 3], [3, 1], [4, 4], [5, -1]])
+emailAllocation([[0, 0], [1, 2], [2, 3], [3, -3], [4, -2], [5, -1]])
 
 # main()
 
