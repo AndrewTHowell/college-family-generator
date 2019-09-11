@@ -18,6 +18,9 @@ from twilio.rest import Client
 # Used to email me when the generator is finished
 from Emailer import Emailer
 
+# Used to reformat Attributes from camelCase to Camel case
+from re import findall
+
 # Section End
 
 
@@ -488,41 +491,82 @@ def emailAllocation(allocation):
     i = 0
     while i < len(allocation):
         # Extract parentID and childIDs
-        children = []
+        childIDs = []
         for j in range(SLOTS):
             [parentIDSlot, childID] = allocation[i+j]
-            children.append(childID)
+            childIDs.append(childID)
         parentID = parentIDSlot // 3
-
-        print(parentID, children)
-
-        assignedChildren = False
-        for child in children:
-            if child > 0:
-                assignedChildren = True
 
         parentNames = [parents.loc[parentID]["name1"],
                        parents.loc[parentID]["name2"],
                        parents.loc[parentID]["name3"]]
 
-        print(parentNames)
+        parentNames = list(filter(None, parentNames))
 
-        message = "Hi \n\n"
+        if len(parentNames) == 1:
+            message = "Hi {0},\n\n".format(parentNames[0])
+        if len(parentNames) == 2:
+            message = "Hi {0} and {1},\n\n".format(parentNames[0],
+                                                   parentNames[1])
+        if len(parentNames) == 3:
+            message = "Hi {0}, {1} and {2},\n\n".format(parentNames[0],
+                                                        parentNames[1],
+                                                        parentNames[2])
 
-        if not assignedChildren:
+        for childID in childIDs:
+            if childID < 0:
+                childIDs.remove(childID)
+
+        if len(childIDs) == 0:
             message += ("Unfortunately, you weren't assigned any children this"
-                        " time. This was due to other being more compatible"
-                        " matchings")
+                        " time. This was due to others being more compatible"
+                        " matchings to the Freshers'.\n\n"
+                        "However, thank you so much for volunteering.\n\n")
 
-        # Get shared interests
-        for attribute in ["subjects",
-                          "meetingPlaces",
-                          "arts",
-                          "sports",
-                          "entertainment",
-                          "nightOut"]:
+        else:
+            message += ("Thank you so much for volunteering, here's some"
+                        " information on your new children.\n\n")
 
-            x = ""
+            parentAttributes = {}
+            # For each attribute, get parent attributes
+            for attribute in ["subjects",
+                              "meetingPlaces",
+                              "arts",
+                              "sports",
+                              "entertainment"]:
+
+                string = parents.loc[parentID][attribute]
+
+                parentAttributes[attribute] = formatForShared(string)
+
+            for childID in childIDs:
+                message += "Name: {0}\nEmail Address: {1}\n".format(
+                                                children.loc[childID]["name"],
+                                                children.loc[childID]["email"])
+
+                # Get shared interests
+                for attribute in ["subjects",
+                                  "meetingPlaces",
+                                  "arts",
+                                  "sports",
+                                  "entertainment"]:
+
+                    string = children.loc[childID][attribute]
+
+                    childSet = formatForShared(string)
+
+                    # Find common interests in Attribute
+                    common = childSet.intersection(parentAttributes[attribute])
+
+                    if len(common) != 0:
+                        # Format Attribute for Email
+                        attr = " ".join(findall('[A-Z][^A-Z]*',
+                                                attribute[0].upper()
+                                                + attribute[1:]))
+
+                        message += "Your common {0} are: ".format(attr)
+
+        print(message)
 
         # emailer.send(parents.loc[parentID]["email"],
         # emailer.send("howelldrew99@gmail.com",
@@ -530,6 +574,23 @@ def emailAllocation(allocation):
         #              message)
 
         i += SLOTS
+
+
+def formatForShared(string):
+    if string == "":
+        return set()
+
+    # Split by ',' into all activities chosen
+    array = string.split(",")
+
+    for i in range(len(array)):
+        if array[i][0] == " ":
+            array[i] = array[i][1:]
+
+    # Save as a set -> we need set operations later on
+    finalSet = set(array)
+
+    return finalSet
 
 
 print("Make sure Sam Attfield Parents for Jack Peachey")

@@ -28,7 +28,7 @@ class Emailer():
         self.server.send_message(self.msg)
 
 
-emailer = Emailer()
-emailer.send("vp@mildert.co.uk",
-             "Test",
-             "Test Message")
+# emailer = Emailer()
+# emailer.send("vp@mildert.co.uk",
+#              "Test",
+#              "Test Message")
