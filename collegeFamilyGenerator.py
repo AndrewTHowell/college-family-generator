@@ -520,8 +520,7 @@ def emailAllocation(allocation):
                         " year.\n")
             message += ("Matchings were based on who was most compatible, and"
                         " so some parents received multiple children and some"
-                        " received none. I tried to make sure everyone"
-                        " received children, but sadly I was unsuccessful."
+                        " received none"
                         "\n\n")
             message += ("However, thank you so much for volunteering to be a "
                         "College Parent.\n")
