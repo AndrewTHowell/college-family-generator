@@ -1,19 +1,16 @@
-
-# # # # # # # # # # # # # College Family Generator # # # # # # # # # # # # #
-
 # Section: Importing Modules
 
 # Used to store information about each child and parent
 import pandas as pd
 
 # Used to find all permutations of allocations
-from itertools import permutations, chain
+# from itertools import permutations, chain
 
 # Used to time the running code
 import time
 
 # Used to send Facebook message to me once the code has finished
-from twilio.rest import Client
+# from twilio.rest import Client
 
 # Used to email me when the generator is finished
 from Emailer import Emailer
@@ -21,8 +18,13 @@ from Emailer import Emailer
 # Used to reformat Attributes from camelCase to Camel case
 from re import findall
 
-# Section End
+# Used to raise x to the power of y (power(x,y) = x^y)
+from math import pow as power
 
+# Used to generate random allocations
+from random import shuffle
+
+# Section End
 
 # Section: Constants
 
@@ -98,8 +100,7 @@ POSSIBLEVALUES = {"yearGoingInto":   ["Year 2",
 
 # Section End
 
-
-# Section: Importing CSV files
+# Section: CSV files
 
 # Location of Folder containing CSV Files
 CSVLocation = ("D:\\howel\\OneDrive - Durham University\\Exec\\VP Development"
@@ -136,7 +137,6 @@ NUMBEROFCHILDREN = len(children.index)
 NUMBEROFPARENTS = len(parents.index)
 NUMBEROFPARENTSLOTS = SLOTS * NUMBEROFPARENTS
 
-
 # Region: Panda Structures
 
 # Parents : ID, email, name1, name2, name3, yearGoingInto, childrenAlready,
@@ -148,8 +148,38 @@ NUMBEROFPARENTSLOTS = SLOTS * NUMBEROFPARENTS
 
 # Region End
 
-# Section End
+# Section: Forming Allocation Data Structure
 
+# row = parents.loc[0]
+# email = row["email"]
+
+# Allocation stored in 2D Array
+allocation = []
+
+# Add Parents to allocation
+# For each parent in the panda
+for index, row in parents.iterrows():
+    # Each Parent has SLOTS child 'slots', so add SLOTS arrays
+    for i in range(SLOTS):
+        allocation.append([row["ID"], -1])
+
+
+# Region: Allocation Structure
+
+# Allocation = [ [ParentID, ChildID], [ParentID, ChildID], ... ]
+
+# Where ParentID repeats SLOTS times (SLOTS child slots)
+# [
+#   [0, -1], [0, -1], [0, -1],
+#   [1, -1], [1, -1], [1, -1],
+#   [2, -1], [2, -1], [2, -1],
+#     ...  ,   ...  ,   ...  ,
+# ]
+
+# Region End
+
+
+# Section End
 
 # Section: Evaluation Functions
 
@@ -396,92 +426,30 @@ def compareScale(value1, value2):
     else:
         return 0
 
-# Region End
-
-# Section End
-
-
-# Section: Forming Allocation Data Structure
-
-# row = parents.loc[0]
-# email = row["email"]
-
-# Allocation stored in 2D Array
-allocation = []
-
-# Add Parents to allocation
-# For each parent in the panda
-for index, row in parents.iterrows():
-    # Each Parent has SLOTS child 'slots', so add SLOTS arrays
-    for i in range(SLOTS):
-        allocation.append([row["ID"], -1])
-
-# Region: Allocation Structure
-
-# Allocation = [ [ParentID, ChildID], [ParentID, ChildID], ... ]
-
-# Where ParentID repeats SLOTS times (SLOTS child slots)
-# [
-#   [0, -1], [0, -1], [0, -1],
-#   [1, -1], [1, -1], [1, -1],
-#   [2, -1], [2, -1], [2, -1],
-#     ...  ,   ...  ,   ...  ,
-# ]
 
 # Region End
 
 # Section End
 
-
-# Section: Main Functions
-
-
-# Evaluate every permutation of allocations, finding the highest scoring
-def main():
-    optimumAllocation = []
-    optimumAllocationScore = 0
-
-    # Get range of all children IDs
-    childIDRange = range(NUMBEROFCHILDREN)
-
-    numberOfEmptySlots = NUMBEROFPARENTSLOTS - NUMBEROFCHILDREN
-    nullIDRange = range(-1, -(numberOfEmptySlots + 1), -1)
-
-    # print(NUMBEROFCHILDREN, numberOfEmptySlots)
-    # print(NUMBEROFPARENTSLOTS)
-
-    perms = permutations(chain(childIDRange, nullIDRange))
-    # perms = [(0, 2, 1, -1, -2, -3)]
-
-    startTime = time.time()
-
-    i = 0
-    for perm in perms:
-        allocation = []
-        for slotID in range(NUMBEROFPARENTSLOTS):
-            # print(slotID, perm[slotID])
-            allocation.append([slotID, perm[slotID]])
-        allocationScore = evaluateAllocation(allocation)
-
-        # print(perm)
-        # print(allocationScore)
-
-        if allocationScore > optimumAllocationScore:
-            optimumAllocation = allocation
-            optimumAllocationScore = allocationScore
-
-        if i == 500:
-            break
-        i += 1
-
-    timeElapsed = time.time() - startTime
-
-    print("Optimum Allocation: {0}".format(optimumAllocation))
-    print("Optimum Allocation Score: {0:.1f}".format(optimumAllocationScore))
-    print("{0:02}:{1:02}".format(round(timeElapsed // 60), (
-                                 round(timeElapsed % 60))))
-
 # Section End
+
+# Section: Emailer Functions
+
+def formatForShared(string):
+    if string == "":
+        return set()
+
+    # Split by ',' into all activities chosen
+    array = string.split(",")
+
+    for i in range(len(array)):
+        if array[i][0] == " ":
+            array[i] = array[i][1:]
+
+    # Save as a set -> we need set operations later on
+    finalSet = set(array)
+
+    return finalSet
 
 
 def emailAllocation(allocation):
@@ -600,29 +568,79 @@ def emailAllocation(allocation):
         i += SLOTS
 
 
-def formatForShared(string):
-    if string == "":
-        return set()
+# Section End
 
-    # Split by ',' into all activities chosen
-    array = string.split(",")
+# Section: Simulated Annealing
 
-    for i in range(len(array)):
-        if array[i][0] == " ":
-            array[i] = array[i][1:]
+# Region: Constants
 
-    # Save as a set -> we need set operations later on
-    finalSet = set(array)
+MAXTEMP = 15
+ALPHA = 0.85
 
-    return finalSet
 
+# Region End
+
+def schedule(t):
+    T = MAXTEMP * power(ALPHA, t)
+
+    return T
+
+
+def generateStartAllocation():
+
+    # Get range of all children IDs
+    childIDRange = range(NUMBEROFCHILDREN)
+    # Convert to list of child IDs
+    childIDList = list(childIDRange)
+
+    # Parents slots not occupied by Children will be 'null' slots
+    numberOfEmptySlots = NUMBEROFPARENTSLOTS - NUMBEROFCHILDREN
+    nullIDRange = range(-1, -(numberOfEmptySlots + 1), -1)
+    # Convert to list of null IDs
+    nullIDList = list(nullIDRange)
+
+    # Combine list of child and null IDs
+    allIDList = childIDList + nullIDList
+
+    print(allIDList)
+
+    randomAllocation = shuffle(allIDList)
+
+    return randomAllocation
+
+
+# Section End
+
+# Section: Main Functions
+
+# Evaluate every permutation of allocations, finding the highest scoring
+def main():
+    optimumAllocation = []
+    optimumAllocationScore = 0
+
+    startTime = time.time()
+
+    # # Add Simulated Annealing here # # # # #
+    generateStartAllocation()
+
+    timeElapsed = time.time() - startTime
+
+    print("Optimum Allocation: {0}".format(optimumAllocation))
+    print("Optimum Allocation Score: {0:.1f}".format(optimumAllocationScore))
+    print("{0:02}:{1:02}".format(round(timeElapsed // 60), (
+                                 round(timeElapsed % 60))))
+
+
+# Section End
 
 print("Make sure Sam Attfield Parents for Jack Peachey")
 print("I.E. remove Jack from Children.csv"
       " and add him to Samuel Attfield's Family")
 print("If emailing out, remember to email Sam that he also has Jack")
 
-emailAllocation([[0, 0], [1, 2], [2, 3], [3, -3], [4, -2], [5, -1]])
+generateStartAllocation()
+
+# emailAllocation([[0, 0], [1, 2], [2, 3], [3, -3], [4, -2], [5, -1]])
 
 # main()
 
@@ -632,6 +650,32 @@ emailAllocation([[0, 0], [1, 2], [2, 3], [3, -3], [4, -2], [5, -1]])
 #              "Code Finished",
 #              "College Family Generator has finished")
 
+"""
+perms = permutations(chain(childIDRange, nullIDRange))
+# perms = [(0, 2, 1, -1, -2, -3)]
+
+i = 0
+for perm in perms:
+    allocation = []
+    for slotID in range(NUMBEROFPARENTSLOTS):
+        # print(slotID, perm[slotID])
+        allocation.append([slotID, perm[slotID]])
+    allocationScore = evaluateAllocation(allocation)
+
+    # print(perm)
+    # print(allocationScore)
+
+    if allocationScore > optimumAllocationScore:
+        optimumAllocation = allocation
+        optimumAllocationScore = allocationScore
+
+    if i == 500:
+        break
+    i += 1
+"""
+
 # Integrate Simulated Annealing and Test
+
+# Export allocations as JSON
 
 # Evaluate child interest similarities
