@@ -31,6 +31,11 @@ from random import shuffle
 # Max Number of Children per Parent
 SLOTS = 3
 
+# Location of Folder containing CSV Files
+CSVLOCATION = ("C:\\Users\\howel\\OneDrive - Durham University\\Exec\\"
+               "VP Development\\College Families\\college-family-generator\\"
+               "Import Files\\")
+
 MULTIPLIERS = {"yearGoingInto":   1,
                "childrenAlready": 1,
                "subjects":        1,
@@ -98,19 +103,17 @@ POSSIBLEVALUES = {"yearGoingInto":   ["Year 2",
 
                   "nightOut":        range(1, 6)}
 
-# Section End
+NUMITERATIONS = 10000
+
+# Section Ends
 
 # Section: CSV files
-
-# Location of Folder containing CSV Files
-CSVLocation = ("D:\\howel\\OneDrive - Durham University\\Exec\\VP Development"
-               "\\College Families\\college-family-generator\\Import Files")
 
 global parents
 global children
 
 # Create the Parents Panda, extracting info from CSV files
-parents = pd.read_csv("{0}\\Parents.csv".format(CSVLocation), skiprows=1,
+parents = pd.read_csv("{0}Parents.csv".format(CSVLOCATION), skiprows=1,
                       names=["email", "name1", "name2", "name3",
                              "yearGoingInto", "childrenAlready", "subjects",
                              "contactAmount", "meetingPlaces",
@@ -118,7 +121,7 @@ parents = pd.read_csv("{0}\\Parents.csv".format(CSVLocation), skiprows=1,
                       usecols=range(1, 14))
 
 # Create the Parents Panda, extracting info from CSV files
-children = pd.read_csv("{0}\\Children.csv".format(CSVLocation), skiprows=1,
+children = pd.read_csv("{0}Children.csv".format(CSVLOCATION), skiprows=1,
                        names=["email", "name", "subjects",
                               "contactAmount", "meetingPlaces",
                               "arts", "sports", "entertainment", "nightOut"],
@@ -606,7 +609,91 @@ def generateStartAllocation():
 
     randomAllocation = shuffle(allIDList)
 
+    print(randomAllocation)
+
     return randomAllocation
+
+
+def simAnneal(matrix):
+
+    lastTemp = MAXTEMP
+
+    evaluations = []
+
+    currentState = generateStartAllocation()
+    currentLength = f(currentState, matrix)
+
+    minTour = currentState
+    minLength = currentLength
+
+    for t in range(NUMITERATIONS):
+
+        T = schedule(t+1)
+        lastTemp = T
+        #print(T)
+
+        #if T == 0: # Program halts
+        #    averageTourLength = sum(tourLengths) / len(tourLengths)
+        #    return currentState, minLength, averageTourLength  # Returns final tour
+
+        # Choose successor state
+        successorState = currentState
+
+        # 2-opt - choose two states to reverse the path between them
+        pos1 = 0
+        pos2 = 1
+        while pos2 - pos1 <= 2:
+            swap = random.sample(successorState[1:], 2)
+
+            pos1 = successorState.index(swap[0])
+            pos2 = successorState.index(swap[1])
+
+            if pos2 < pos1:
+                temp = pos1
+                pos1 = pos2
+                pos2 = temp
+
+        front = successorState[:pos1+1]
+        middle = successorState[pos1+1:pos2]
+        middle.reverse()
+        back = successorState[pos2:]
+
+        successorState = front + middle + back
+
+        oldWeights = matrix[currentState[pos1]-1][currentState[pos1+1]-1]  +   matrix[currentState[pos2]-1][currentState[pos2-1]-1]
+        newWeights = matrix[successorState[pos1]-1][successorState[pos1+1]-1]  +  matrix[successorState[pos2]-1][successorState[pos2-1]-1]
+
+        successorTourLength = currentLength - oldWeights + newWeights
+
+        if successorTourLength < minLength:
+            minLength = successorTourLength
+            minTour = successorState
+
+        deltaE =  currentLength - successorTourLength
+
+        if deltaE >= 0:
+            currentState = successorState
+            currentLength = successorTourLength
+            tourLength = successorTourLength
+
+        else:
+            if T == 0:
+                probability = 0
+            else:
+                probability = math.exp(deltaE/T)
+
+            if random.random() <= probability:
+                currentState = successorState
+                currentLength = successorTourLength
+                tourLength = successorTourLength
+            else:
+                tourLength = currentLength
+
+        tourLengths.append(tourLength)
+
+    averageTourLength = sum(tourLengths) / len(tourLengths)
+
+    return minTour, minLength, averageTourLength
 
 
 # Section End
