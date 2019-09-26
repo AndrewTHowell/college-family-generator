@@ -30,6 +30,9 @@ from random import shuffle
 # Used to do something with probability x
 from random import random
 
+# Used to choose two parent slots to swap
+from random import sample
+
 # Section End
 
 # Section: Constants
@@ -204,14 +207,11 @@ def evaluateAllocation(allocation):
     allocationScores = []
 
     # Collect scores for each match
-    parentID = 0
-    for i in range(len(allocation)):
+    for parentID in range(len(allocation)):
 
         matchScore = evaluateMatching([parentID, allocation[parentID]])
 
         allocationScores.append(matchScore)
-
-        i += 1
 
     return allocationScores
 
@@ -607,13 +607,10 @@ def generateStartAllocation():
     # Combine list of child and null IDs
     allIDList = childIDList + nullIDList
 
-    # print(allIDList)
+    # Randomly shuffles the ID list
+    shuffle(allIDList)
 
-    randomAllocation = shuffle(allIDList)
-
-    # print(randomAllocation)
-
-    return randomAllocation
+    return allIDList
 
 
 def simAnneal(maxTemp, alpha):
@@ -625,18 +622,22 @@ def simAnneal(maxTemp, alpha):
     bestAllocation = currentState
     bestValue = currentValue
 
-    temp = maxTemp
+    temperature = maxTemp
     t = 0
-    while temp > 0.0001:
-        temp = schedule(maxTemp, alpha, t)
+    while temperature > 0.01:
+
+        temperature = schedule(maxTemp, alpha, t)
 
         # Set temporary next state
         nextState = currentState
         nextScores = currentScores
         nextValue = currentValue
 
-        # Make random swap in allocation
-        swapIDs = random.sample(len(currentState), 2)
+        # Make random swap in allocation (don't swap empty slots)
+        swapIDs = sample(list(range(len(currentState))), 2)
+        while nextState[swapIDs[0]] < 0 and nextState[swapIDs[1]] < 0:
+            swapIDs = sample(list(range(len(currentState))), 2)
+
         temp = nextState[swapIDs[0]]
         nextState[swapIDs[0]] = nextState[swapIDs[1]]
         nextState[swapIDs[1]] = temp
@@ -645,11 +646,15 @@ def simAnneal(maxTemp, alpha):
         newValues = 0
         oldValues = 0
         for swapID in swapIDs:
-            newValues += evaluateMatching(swapID, currentState[swapID])
+            newValue = evaluateMatching([swapID, currentState[swapID]])
+            newValues += newValue
+            nextState[swapID] = newValue
             oldValues += currentScores[swapID]
         nextValue += newValues - oldValues
 
         deltaE = nextValue - currentValue
+
+        print(nextScores, nextValue)
 
         # If nextState is better, move to it
         if deltaE >= 0:
@@ -664,12 +669,16 @@ def simAnneal(maxTemp, alpha):
 
         # If not better, move with probability...
         else:
-            probabilityToMove = exp(deltaE/temp)
+            probabilityToMove = exp(deltaE/temperature)
 
             if random() < probabilityToMove:
                 currentState = nextState
                 currentValue = nextValue
                 currentScores = nextScores
+
+                input("Swapped to worse")
+
+        t += 1
 
     return [bestAllocation, bestValue]
 
@@ -684,7 +693,7 @@ def main():
     startTime = time.time()
 
     maxTemp = 100
-    alpha = 0.85
+    alpha = 0.99
     bestAllocation, bestValue = simAnneal(maxTemp, alpha)
 
     timeElapsed = time.time() - startTime
@@ -702,7 +711,7 @@ print("I.E. remove Jack from Children.csv"
       " and add him to Samuel Attfield's Family")
 print("If emailing out, remember to email Sam that he also has Jack")
 
-# main()
+main()
 
 # Send email to self, notifiying me that the code has finished
 # emailer = Emailer()
