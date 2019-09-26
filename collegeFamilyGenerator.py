@@ -21,8 +21,14 @@ from re import findall
 # Used to raise x to the power of y (power(x,y) = x^y)
 from math import pow as power
 
+# Used to find exponential of x (exp(x) = e^x)
+from math import exp
+
 # Used to generate random allocations
 from random import shuffle
+
+# Used to do something with probability x
+from random import random
 
 # Section End
 
@@ -128,8 +134,8 @@ children = pd.read_csv("{0}Children.csv".format(CSVLOCATION), skiprows=1,
                        usecols=range(1, 10))
 
 # Add ID columns to both Pandas
-parents.insert(0, "ID", range(0, len(parents)))
-children.insert(0, "ID", range(0, len(children)))
+parents.insert(0, "ID", range(len(parents)))
+children.insert(0, "ID", range(len(children)))
 
 # Fill in missing values (empty cells) as empty strings
 parents = parents.fillna("")
@@ -151,6 +157,9 @@ NUMBEROFPARENTSLOTS = SLOTS * NUMBEROFPARENTS
 
 # Region End
 
+# Section End
+
+"""
 # Section: Forming Allocation Data Structure
 
 # row = parents.loc[0]
@@ -164,7 +173,7 @@ allocation = []
 for index, row in parents.iterrows():
     # Each Parent has SLOTS child 'slots', so add SLOTS arrays
     for i in range(SLOTS):
-        allocation.append([row["ID"], -1])
+        allocation.append(-1)
 
 
 # Region: Allocation Structure
@@ -181,41 +190,30 @@ for index, row in parents.iterrows():
 
 # Region End
 
-
 # Section End
+"""
+
 
 # Section: Evaluation Functions
 
-# Region: Evaluation Function Stack
+# Region: Evaluation Functions
 
 # Returns a score for this allocation
 def evaluateAllocation(allocation):
 
-    allocationScore = 0
+    allocationScores = []
 
     # Collect scores for each match
-    for match in allocation:
-        allocationScore += evaluateMatching(match)
+    parentID = 0
+    for i in range(len(allocation)):
 
-        # Evaluate parents -> year going into, already have children
+        matchScore = evaluateMatching([parentID, allocation[parentID]])
 
-        # Evaluate Year Going Into
-        yearGoingInto = parents.loc[match[0]//SLOTS]["yearGoingInto"]
-        if yearGoingInto == "Year 2":
-            allocationScore += MULTIPLIERS["yearGoingInto"] * 10
-        elif yearGoingInto == "Year 3":
-            allocationScore += MULTIPLIERS["yearGoingInto"] * 0
-        elif yearGoingInto == "Year 4":
-            allocationScore += MULTIPLIERS["yearGoingInto"] * -10
+        allocationScores.append(matchScore)
 
-        # Evaluate Children Already
-        childrenAlready = parents.loc[match[0]//SLOTS]["childrenAlready"]
-        if childrenAlready == "Yes":
-            allocationScore += MULTIPLIERS["childrenAlready"] * -10
-        elif childrenAlready == "No":
-            allocationScore += MULTIPLIERS["childrenAlready"] * 10
+        i += 1
 
-    return allocationScore
+    return allocationScores
 
 
 # Returns a score for this matching
@@ -226,8 +224,9 @@ def evaluateMatching(match):
     # If match has not been encountered before
     parentID, childID = match
 
-    # If childID is negative, slot is empty so no need to evaluate
+    # If childID is positive, slot is not empty so need to evaluate
     if childID >= 0:
+
         if evaluateMatching.values["matches"][parentID][childID] == -1:
             # matchScore += (MULTIPLIERS["subject"]
             #                * evaluateSubject(parentID, childID))
@@ -249,6 +248,24 @@ def evaluateMatching(match):
         # If match has been encountered before
         else:
             matchScore = evaluateMatching.values["matches"][parentID][childID]
+
+        if childID >= 0:
+            # Evaluate Parent suitability
+            # Evaluate Year Going Into
+            yearGoingInto = parents.loc[parentID//SLOTS]["yearGoingInto"]
+            if yearGoingInto == "Year 2":
+                matchScore += MULTIPLIERS["yearGoingInto"] * 10
+            elif yearGoingInto == "Year 3":
+                matchScore += MULTIPLIERS["yearGoingInto"] * 5
+            elif yearGoingInto == "Year 4":
+                matchScore += MULTIPLIERS["yearGoingInto"] * 0
+
+            # Evaluate Children Already
+            childrenAlready = parents.loc[parentID//SLOTS]["childrenAlready"]
+            if childrenAlready == "Yes":
+                matchScore += MULTIPLIERS["childrenAlready"] * 0
+            elif childrenAlready == "No":
+                matchScore += MULTIPLIERS["childrenAlready"] * 10
 
     return matchScore
 
@@ -272,7 +289,7 @@ def evaluateMatching(match):
 
         score = 0
 
-        # Subject evaluation system ###########################################
+        # Subject evaluation system
 
         evaluateMatching.values[attrID][pSubjects][cSubjects] = score
 
@@ -345,10 +362,10 @@ for attr in POSSIBLEVALUES.keys():
         evaluateMatching.values[attr] = {}
         # print("Initialising for {0}".format(attr))'''
 
+
 # Division End
 
 # Region End
-
 
 # Region: Comparator and Format Functions
 
@@ -434,8 +451,6 @@ def compareScale(value1, value2):
 
 # Section End
 
-# Section End
-
 # Section: Emailer Functions
 
 def formatForShared(string):
@@ -459,14 +474,12 @@ def emailAllocation(allocation):
 
     emailer = Emailer()
 
-    i = 0
-    while i < len(allocation):
-        # Extract parentID and childIDs
+    for parentID in range(len(allocation) // 3):
+        # Extract childIDs
         childIDs = []
-        for j in range(SLOTS):
-            [parentIDSlot, childID] = allocation[i+j]
+        for slotNum in range(SLOTS):
+            childID = allocation[parentID + slotNum]
             childIDs.append(childID)
-        parentID = parentIDSlot // 3
 
         parentNames = [parents.loc[parentID]["name1"],
                        parents.loc[parentID]["name2"],
@@ -568,24 +581,13 @@ def emailAllocation(allocation):
         #              "College Family Allocation",
         #              message)
 
-        i += SLOTS
-
 
 # Section End
 
 # Section: Simulated Annealing
 
-# Region: Constants
-
-MAXTEMP = 15
-ALPHA = 0.85
-
-
-# Region End
-
-def schedule(t):
-    T = MAXTEMP * power(ALPHA, t)
-
+def schedule(maxTemp, alpha, t):
+    T = maxTemp * power(alpha, t)
     return T
 
 
@@ -605,95 +607,71 @@ def generateStartAllocation():
     # Combine list of child and null IDs
     allIDList = childIDList + nullIDList
 
-    print(allIDList)
+    # print(allIDList)
 
     randomAllocation = shuffle(allIDList)
 
-    print(randomAllocation)
+    # print(randomAllocation)
 
     return randomAllocation
 
 
-def simAnneal(matrix):
-
-    lastTemp = MAXTEMP
-
-    evaluations = []
+def simAnneal(maxTemp, alpha):
 
     currentState = generateStartAllocation()
-    currentLength = f(currentState, matrix)
+    currentScores = evaluateAllocation(currentState)
+    currentValue = sum(currentScores)
 
-    minTour = currentState
-    minLength = currentLength
+    bestAllocation = currentState
+    bestValue = currentValue
 
-    for t in range(NUMITERATIONS):
+    temp = maxTemp
+    t = 0
+    while temp > 0.0001:
+        temp = schedule(maxTemp, alpha, t)
 
-        T = schedule(t+1)
-        lastTemp = T
-        #print(T)
+        # Set temporary next state
+        nextState = currentState
+        nextScores = currentScores
+        nextValue = currentValue
 
-        #if T == 0: # Program halts
-        #    averageTourLength = sum(tourLengths) / len(tourLengths)
-        #    return currentState, minLength, averageTourLength  # Returns final tour
+        # Make random swap in allocation
+        swapIDs = random.sample(len(currentState), 2)
+        temp = nextState[swapIDs[0]]
+        nextState[swapIDs[0]] = nextState[swapIDs[1]]
+        nextState[swapIDs[1]] = temp
 
-        # Choose successor state
-        successorState = currentState
+        # Reevaluate swapped allocation
+        newValues = 0
+        oldValues = 0
+        for swapID in swapIDs:
+            newValues += evaluateMatching(swapID, currentState[swapID])
+            oldValues += currentScores[swapID]
+        nextValue += newValues - oldValues
 
-        # 2-opt - choose two states to reverse the path between them
-        pos1 = 0
-        pos2 = 1
-        while pos2 - pos1 <= 2:
-            swap = random.sample(successorState[1:], 2)
+        deltaE = nextValue - currentValue
 
-            pos1 = successorState.index(swap[0])
-            pos2 = successorState.index(swap[1])
-
-            if pos2 < pos1:
-                temp = pos1
-                pos1 = pos2
-                pos2 = temp
-
-        front = successorState[:pos1+1]
-        middle = successorState[pos1+1:pos2]
-        middle.reverse()
-        back = successorState[pos2:]
-
-        successorState = front + middle + back
-
-        oldWeights = matrix[currentState[pos1]-1][currentState[pos1+1]-1]  +   matrix[currentState[pos2]-1][currentState[pos2-1]-1]
-        newWeights = matrix[successorState[pos1]-1][successorState[pos1+1]-1]  +  matrix[successorState[pos2]-1][successorState[pos2-1]-1]
-
-        successorTourLength = currentLength - oldWeights + newWeights
-
-        if successorTourLength < minLength:
-            minLength = successorTourLength
-            minTour = successorState
-
-        deltaE =  currentLength - successorTourLength
-
+        # If nextState is better, move to it
         if deltaE >= 0:
-            currentState = successorState
-            currentLength = successorTourLength
-            tourLength = successorTourLength
+            currentState = nextState
+            currentValue = nextValue
+            currentScores = nextScores
 
+            # See if it is best allocation so far
+            if nextValue > bestValue:
+                bestValue = nextValue
+                bestAllocation = nextState
+
+        # If not better, move with probability...
         else:
-            if T == 0:
-                probability = 0
-            else:
-                probability = math.exp(deltaE/T)
+            probabilityToMove = exp(deltaE/temp)
 
-            if random.random() <= probability:
-                currentState = successorState
-                currentLength = successorTourLength
-                tourLength = successorTourLength
-            else:
-                tourLength = currentLength
+            if random() < probabilityToMove:
+                currentState = nextState
+                currentValue = nextValue
+                currentScores = nextScores
 
-        tourLengths.append(tourLength)
-
-    averageTourLength = sum(tourLengths) / len(tourLengths)
-
-    return minTour, minLength, averageTourLength
+    return [bestAllocation, bestValue]
 
 
 # Section End
@@ -702,18 +680,17 @@ def simAnneal(matrix):
 
 # Evaluate every permutation of allocations, finding the highest scoring
 def main():
-    optimumAllocation = []
-    optimumAllocationScore = 0
 
     startTime = time.time()
 
-    # # Add Simulated Annealing here # # # # #
-    generateStartAllocation()
+    maxTemp = 100
+    alpha = 0.85
+    bestAllocation, bestValue = simAnneal(maxTemp, alpha)
 
     timeElapsed = time.time() - startTime
 
-    print("Optimum Allocation: {0}".format(optimumAllocation))
-    print("Optimum Allocation Score: {0:.1f}".format(optimumAllocationScore))
+    print("Optimum Allocation: {0}".format(bestAllocation))
+    print("Optimum Allocation Score: {0:.1f}".format(bestValue))
     print("{0:02}:{1:02}".format(round(timeElapsed // 60), (
                                  round(timeElapsed % 60))))
 
@@ -724,10 +701,6 @@ print("Make sure Sam Attfield Parents for Jack Peachey")
 print("I.E. remove Jack from Children.csv"
       " and add him to Samuel Attfield's Family")
 print("If emailing out, remember to email Sam that he also has Jack")
-
-generateStartAllocation()
-
-# emailAllocation([[0, 0], [1, 2], [2, 3], [3, -3], [4, -2], [5, -1]])
 
 # main()
 
@@ -760,9 +733,6 @@ for perm in perms:
         break
     i += 1
 """
-
-# Integrate Simulated Annealing and Test
-
 # Export allocations as JSON
 
 # Evaluate child interest similarities
