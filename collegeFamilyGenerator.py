@@ -36,6 +36,9 @@ from random import sample
 # Used to find local path
 from os.path import dirname, abspath
 
+# Used to save best allocations
+import json
+
 # Section End
 
 # Section: Constants
@@ -44,7 +47,8 @@ from os.path import dirname, abspath
 SLOTS = 3
 
 # Location of Folder containing CSV Files (current path + Import Files folder)
-CSVLOCATION = dirname(abspath(__file__)) + "\\Import Files\\"
+CURRENTPATH = dirname(abspath(__file__)) + "\\"
+CSVLOCATION = CURRENTPATH + "Import Files\\"
 
 MULTIPLIERS = {"yearGoingInto":   1,
                "childrenAlready": 1,
@@ -150,6 +154,7 @@ NUMBEROFCHILDREN = len(children.index)
 NUMBEROFPARENTS = len(parents.index)
 NUMBEROFPARENTSLOTS = SLOTS * NUMBEROFPARENTS
 
+
 # Region: Panda Structures
 
 # Parents : ID, email, name1, name2, name3, yearGoingInto, childrenAlready,
@@ -162,41 +167,6 @@ NUMBEROFPARENTSLOTS = SLOTS * NUMBEROFPARENTS
 # Region End
 
 # Section End
-
-"""
-# Section: Forming Allocation Data Structure
-
-# row = parents.loc[0]
-# email = row["email"]
-
-# Allocation stored in 2D Array
-allocation = []
-
-# Add Parents to allocation
-# For each parent in the panda
-for index, row in parents.iterrows():
-    # Each Parent has SLOTS child 'slots', so add SLOTS arrays
-    for i in range(SLOTS):
-        allocation.append(-1)
-
-
-# Region: Allocation Structure
-
-# Allocation = [ [ParentID, ChildID], [ParentID, ChildID], ... ]
-
-# Where ParentID repeats SLOTS times (SLOTS child slots)
-# [
-#   [0, -1], [0, -1], [0, -1],
-#   [1, -1], [1, -1], [1, -1],
-#   [2, -1], [2, -1], [2, -1],
-#     ...  ,   ...  ,   ...  ,
-# ]
-
-# Region End
-
-# Section End
-"""
-
 
 # Section: Evaluation Functions
 
@@ -625,7 +595,7 @@ def simAnneal(maxTemp, alpha):
 
     temperature = maxTemp
     t = 0
-    while temperature > 0.01:
+    while temperature > 0.001:
 
         temperature = schedule(maxTemp, alpha, t)
 
@@ -680,6 +650,8 @@ def simAnneal(maxTemp, alpha):
 
         t += 1
 
+    print(t)
+
     return [bestState, bestValue]
 
 
@@ -692,16 +664,27 @@ def main():
 
     startTime = time.time()
 
-    maxTemp = 100
-    alpha = 0.9
+    maxTemp = 1000
+    alpha = 0.99
     bestAllocation, bestValue = simAnneal(maxTemp, alpha)
 
     timeElapsed = time.time() - startTime
 
     print("Optimum Allocation: {0}".format(bestAllocation))
     print("Optimum Allocation Score: {0:.1f}".format(bestValue))
-    print("{0:02}:{1:02}".format(round(timeElapsed // 60), (
-                                 round(timeElapsed % 60))))
+    print("{0:02}:{1:02}".format(round(timeElapsed // 60),
+                                 round(timeElapsed % 60)))
+
+    choice = input("Save allocation? (Y or N): ")
+    if choice.lower() != "n":
+        with open(CURRENTPATH + "best.json", "r")as readFile:
+            fileBest = json.load(readFile)
+        if fileBest["bestValue"] < bestValue:
+            print("Best found so far!")
+            newFileBest = {"bestValue": bestValue,
+                           "bestAllocation": bestAllocation}
+            with open(CURRENTPATH + "best.json", "w")as writeFile:
+                json.dump(newFileBest, writeFile)
 
 
 # Section End
