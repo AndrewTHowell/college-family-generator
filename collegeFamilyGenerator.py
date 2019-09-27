@@ -30,6 +30,12 @@ from random import shuffle
 # Used to do something with probability x
 from random import random
 
+<<<<<<< HEAD
+=======
+# Used to choose two parent slots to swap
+from random import sample
+
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
 # Section End
 
 # Section: Constants
@@ -204,15 +210,22 @@ def evaluateAllocation(allocation):
     allocationScores = []
 
     # Collect scores for each match
+<<<<<<< HEAD
     parentID = 0
     for i in range(len(allocation)):
+=======
+    for parentID in range(len(allocation)):
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
 
         matchScore = evaluateMatching([parentID, allocation[parentID]])
 
         allocationScores.append(matchScore)
 
+<<<<<<< HEAD
         i += 1
 
+=======
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
     return allocationScores
 
 
@@ -607,6 +620,7 @@ def generateStartAllocation():
     # Combine list of child and null IDs
     allIDList = childIDList + nullIDList
 
+<<<<<<< HEAD
     # print(allIDList)
 
     randomAllocation = shuffle(allIDList)
@@ -614,6 +628,12 @@ def generateStartAllocation():
     # print(randomAllocation)
 
     return randomAllocation
+=======
+    # Randomly shuffles the ID list
+    shuffle(allIDList)
+
+    return allIDList
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
 
 
 def simAnneal(maxTemp, alpha):
@@ -622,6 +642,7 @@ def simAnneal(maxTemp, alpha):
     currentScores = evaluateAllocation(currentState)
     currentValue = sum(currentScores)
 
+<<<<<<< HEAD
     bestAllocation = currentState
     bestValue = currentValue
 
@@ -629,14 +650,32 @@ def simAnneal(maxTemp, alpha):
     t = 0
     while temp > 0.0001:
         temp = schedule(maxTemp, alpha, t)
+=======
+    bestState = currentState
+    bestValue = currentValue
+
+    temperature = maxTemp
+    t = 0
+    while temperature > 0.01:
+
+        temperature = schedule(maxTemp, alpha, t)
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
 
         # Set temporary next state
         nextState = currentState
         nextScores = currentScores
         nextValue = currentValue
 
+<<<<<<< HEAD
         # Make random swap in allocation
         swapIDs = random.sample(len(currentState), 2)
+=======
+        # Make random swap in allocation (don't swap empty slots)
+        swapIDs = sample(list(range(len(currentState))), 2)
+        while nextState[swapIDs[0]] < 0 and nextState[swapIDs[1]] < 0:
+            swapIDs = sample(list(range(len(currentState))), 2)
+
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
         temp = nextState[swapIDs[0]]
         nextState[swapIDs[0]] = nextState[swapIDs[1]]
         nextState[swapIDs[1]] = temp
@@ -645,12 +684,22 @@ def simAnneal(maxTemp, alpha):
         newValues = 0
         oldValues = 0
         for swapID in swapIDs:
+<<<<<<< HEAD
             newValues += evaluateMatching(swapID, currentState[swapID])
+=======
+            newValue = evaluateMatching([swapID, currentState[swapID]])
+            newValues += newValue
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
             oldValues += currentScores[swapID]
         nextValue += newValues - oldValues
 
         deltaE = nextValue - currentValue
 
+<<<<<<< HEAD
+=======
+        # print(nextScores, nextValue)
+
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
         # If nextState is better, move to it
         if deltaE >= 0:
             currentState = nextState
@@ -660,18 +709,34 @@ def simAnneal(maxTemp, alpha):
             # See if it is best allocation so far
             if nextValue > bestValue:
                 bestValue = nextValue
+<<<<<<< HEAD
                 bestAllocation = nextState
 
         # If not better, move with probability...
         else:
             probabilityToMove = exp(deltaE/temp)
+=======
+                bestState = nextState
+
+        # If not better, move with probability...
+        else:
+            probabilityToMove = exp(deltaE/temperature)
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
 
             if random() < probabilityToMove:
                 currentState = nextState
                 currentValue = nextValue
                 currentScores = nextScores
 
+<<<<<<< HEAD
     return [bestAllocation, bestValue]
+=======
+                # input("Swapped to worse")
+
+        t += 1
+
+    return [bestState, bestValue]
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
 
 
 # Section End
@@ -684,7 +749,11 @@ def main():
     startTime = time.time()
 
     maxTemp = 100
+<<<<<<< HEAD
     alpha = 0.85
+=======
+    alpha = 0.9
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
     bestAllocation, bestValue = simAnneal(maxTemp, alpha)
 
     timeElapsed = time.time() - startTime
@@ -702,7 +771,11 @@ print("I.E. remove Jack from Children.csv"
       " and add him to Samuel Attfield's Family")
 print("If emailing out, remember to email Sam that he also has Jack")
 
+<<<<<<< HEAD
 # main()
+=======
+main()
+>>>>>>> 29c18c6377fa7633952547844516a1d469d15c26
 
 # Send email to self, notifiying me that the code has finished
 # emailer = Emailer()
