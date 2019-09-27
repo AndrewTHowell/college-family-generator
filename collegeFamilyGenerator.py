@@ -584,7 +584,7 @@ def generateStartAllocation():
     return allIDList
 
 
-def simAnneal(maxTemp, alpha):
+def simAnneal(maxTemp, alpha, temperatureEndValue):
 
     currentState = generateStartAllocation()
     currentScores = evaluateAllocation(currentState)
@@ -595,7 +595,7 @@ def simAnneal(maxTemp, alpha):
 
     temperature = maxTemp
     t = 0
-    while temperature > 0.001:
+    while temperature > temperatureEndValue:
 
         temperature = schedule(maxTemp, alpha, t)
 
@@ -666,6 +666,7 @@ def main():
 
     maxTemp = 1000
     alpha = 0.99
+    temperatureEndValue = 0.001
     bestAllocation, bestValue = simAnneal(maxTemp, alpha)
 
     timeElapsed = time.time() - startTime
@@ -694,7 +695,19 @@ print("I.E. remove Jack from Children.csv"
       " and add him to Samuel Attfield's Family")
 print("If emailing out, remember to email Sam that he also has Jack")
 
-main()
+#main()
+
+parentNums = 0
+for parentGroup in range(len(parents)):
+    for nameAttr in ["name1", "name2", "name3"]:
+        name = parents.loc[parentGroup][nameAttr]
+        print(name)
+        if name != "":
+            parentNums += 1
+    break
+
+
+print(parentNums)
 
 # Send email to self, notifiying me that the code has finished
 # emailer = Emailer()
