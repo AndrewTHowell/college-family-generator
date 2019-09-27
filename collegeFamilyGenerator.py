@@ -695,19 +695,7 @@ print("I.E. remove Jack from Children.csv"
       " and add him to Samuel Attfield's Family")
 print("If emailing out, remember to email Sam that he also has Jack")
 
-#main()
-
-parentNums = 0
-for parentGroup in range(len(parents)):
-    for nameAttr in ["name1", "name2", "name3"]:
-        name = parents.loc[parentGroup][nameAttr]
-        print(name)
-        if name != "":
-            parentNums += 1
-    break
-
-
-print(parentNums)
+main()
 
 # Send email to self, notifiying me that the code has finished
 # emailer = Emailer()
