@@ -619,7 +619,7 @@ def simAnneal(maxTemp, alpha):
     currentScores = evaluateAllocation(currentState)
     currentValue = sum(currentScores)
 
-    bestAllocation = currentState
+    bestState = currentState
     bestValue = currentValue
 
     temperature = maxTemp
@@ -648,13 +648,12 @@ def simAnneal(maxTemp, alpha):
         for swapID in swapIDs:
             newValue = evaluateMatching([swapID, currentState[swapID]])
             newValues += newValue
-            nextState[swapID] = newValue
             oldValues += currentScores[swapID]
         nextValue += newValues - oldValues
 
         deltaE = nextValue - currentValue
 
-        print(nextScores, nextValue)
+        # print(nextScores, nextValue)
 
         # If nextState is better, move to it
         if deltaE >= 0:
@@ -665,7 +664,7 @@ def simAnneal(maxTemp, alpha):
             # See if it is best allocation so far
             if nextValue > bestValue:
                 bestValue = nextValue
-                bestAllocation = nextState
+                bestState = nextState
 
         # If not better, move with probability...
         else:
@@ -676,11 +675,11 @@ def simAnneal(maxTemp, alpha):
                 currentValue = nextValue
                 currentScores = nextScores
 
-                input("Swapped to worse")
+                # input("Swapped to worse")
 
         t += 1
 
-    return [bestAllocation, bestValue]
+    return [bestState, bestValue]
 
 
 # Section End
@@ -693,7 +692,7 @@ def main():
     startTime = time.time()
 
     maxTemp = 100
-    alpha = 0.99
+    alpha = 0.9
     bestAllocation, bestValue = simAnneal(maxTemp, alpha)
 
     timeElapsed = time.time() - startTime
