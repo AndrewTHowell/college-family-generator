@@ -575,14 +575,9 @@ def simAnneal(maxTemp, alpha, temperatureEndValue):
                 nextScores[parentID] = -1 * MULTIPLIERS["childless"]
                 # print(nextScores[parentID])
                 print(nextScores)
-<<<<<<< HEAD
-
-
-=======
 
         nextValue = sum(nextScores)
 
->>>>>>> e239f37b5b780fa2ec20522080d86af168d4b544
         deltaE = nextValue - currentValue
 
         # If nextState is better, move to it
