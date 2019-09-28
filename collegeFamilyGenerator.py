@@ -50,7 +50,8 @@ SLOTS = 3
 CURRENTPATH = dirname(abspath(__file__)) + "\\"
 CSVLOCATION = CURRENTPATH + "Import Files\\"
 
-MULTIPLIERS = {"yearGoingInto":   2,
+MULTIPLIERS = {"childless":       1000,
+               "yearGoingInto":   2,
                "childrenAlready": 3,
                "subjects":        5,
                "contactAmount":   3,
@@ -117,8 +118,6 @@ POSSIBLEVALUES = {"yearGoingInto":   ["Year 2",
 
                   "nightOut":        range(1, 6)}
 
-NUMITERATIONS = 10000
-
 # Section Ends
 
 # Section: CSV files
@@ -170,8 +169,6 @@ NUMBEROFPARENTSLOTS = SLOTS * NUMBEROFPARENTS
 
 # Section: Evaluation Functions
 
-# Region: Evaluation Functions
-
 # Returns a score for this allocation
 def evaluateAllocation(allocation):
 
@@ -220,23 +217,22 @@ def evaluateMatching(match):
         else:
             matchScore = evaluateMatching.values["matches"][parentID][childID]
 
-        if childID >= 0:
-            # Evaluate Parent suitability
-            # Evaluate Year Going Into
-            yearGoingInto = parents.loc[parentID//SLOTS]["yearGoingInto"]
-            if yearGoingInto == "Year 2":
-                matchScore += MULTIPLIERS["yearGoingInto"] * 10
-            elif yearGoingInto == "Year 3":
-                matchScore += MULTIPLIERS["yearGoingInto"] * 5
-            elif yearGoingInto == "Year 4":
-                matchScore += MULTIPLIERS["yearGoingInto"] * 0
+        # Evaluate Parent suitability
+        # Evaluate Year Going Into
+        yearGoingInto = parents.loc[parentID//SLOTS]["yearGoingInto"]
+        if yearGoingInto == "Year 2":
+            matchScore += MULTIPLIERS["yearGoingInto"] * 10
+        elif yearGoingInto == "Year 3":
+            matchScore += MULTIPLIERS["yearGoingInto"] * 5
+        elif yearGoingInto == "Year 4":
+            matchScore += MULTIPLIERS["yearGoingInto"] * 0
 
-            # Evaluate Children Already
-            childrenAlready = parents.loc[parentID//SLOTS]["childrenAlready"]
-            if childrenAlready == "Yes":
-                matchScore += MULTIPLIERS["childrenAlready"] * 0
-            elif childrenAlready == "No":
-                matchScore += MULTIPLIERS["childrenAlready"] * 10
+        # Evaluate Children Already
+        childrenAlready = parents.loc[parentID//SLOTS]["childrenAlready"]
+        if childrenAlready == "Yes":
+            matchScore += MULTIPLIERS["childrenAlready"] * 0
+        elif childrenAlready == "No":
+            matchScore += MULTIPLIERS["childrenAlready"] * 10
 
     return matchScore
 
@@ -269,7 +265,7 @@ def evaluateActivities(parentID, childID, attrID):
     return score
 
 
-# Division: Initialising Static Function Variables
+# Region: Initialising Static Function Variables
 
 evaluateMatching.values = {}
 
@@ -283,8 +279,6 @@ for parent in range(NUMBEROFPARENTSLOTS):
 
 # print(evaluateMatching.values["matches"])
 
-
-# Division End
 
 # Region End
 
@@ -516,6 +510,7 @@ def generateStartAllocation():
 
     # Get range of all children IDs
     childIDRange = range(NUMBEROFCHILDREN)
+
     # Convert to list of child IDs
     childIDList = list(childIDRange)
 
@@ -564,17 +559,28 @@ def simAnneal(maxTemp, alpha, temperatureEndValue):
         nextState[swapIDs[1]] = temp
 
         # Reevaluate swapped allocation
-        newValues = 0
-        oldValues = 0
         for swapID in swapIDs:
             newValue = evaluateMatching([swapID, currentState[swapID]])
             newValues += newValue
             oldValues += currentScores[swapID]
         nextValue += newValues - oldValues
 
-        deltaE = nextValue - currentValue
+        # Evaluate each parent group
+        for parentID in range(len(nextState)//SLOTS):
+            hasChildren = False
+            for slotNum in range(SLOTS):
+                if nextState[parentID + slotNum] >= 0:
+                    hasChildren = True
+            # If this parent group has no children, penalise their first slot
+            if not hasChildren:
+                # print("They don't have children")
+                # print(nextScores[parentID])
+                nextScores[parentID] = -1 * MULTIPLIERS["childless"]
+                # print(nextScores[parentID])
+                print(nextScores)
 
-        # print(nextScores, nextValue)
+
+        deltaE = nextValue - currentValue
 
         # If nextState is better, move to it
         if deltaE >= 0:
@@ -596,8 +602,6 @@ def simAnneal(maxTemp, alpha, temperatureEndValue):
                 currentValue = nextValue
                 currentScores = nextScores
 
-                # input("Swapped to worse")
-
         t += 1
 
     return [bestState, bestValue]
@@ -615,7 +619,16 @@ def main():
     maxTemp = 1000000
     alpha = 0.98
     temperatureEndValue = 0.00001
-    bestAllocation, bestValue = simAnneal(maxTemp, alpha, temperatureEndValue)
+
+    bestAllocation = []
+    bestValue = 0
+    for i in range(1):
+        allocation, value = simAnneal(maxTemp,
+                                      alpha,
+                                      temperatureEndValue)
+        if value > bestValue:
+            bestValue = value
+            bestAllocation = allocation
 
     """
     Testing parameters
@@ -642,16 +655,24 @@ def main():
 
     timeElapsed = time.time() - startTime
 
-    print("Optimum Allocation: {0}".format(bestAllocation))
+    print("Optimum Allocation: ")
+    parentID = 0
+    for i in range(len(bestAllocation)//SLOTS):
+        for j in range(SLOTS):
+            print(bestAllocation[parentID + j], end=",")
+        print()
+        parentID += SLOTS
     print("Optimum Allocation Score: {0:.1f}".format(bestValue))
     print("{0:02}:{1:02}".format(round(timeElapsed // 60),
                                  round(timeElapsed % 60)))
 
+    """
     # Send email to self, notifiying me that the code has finished
     emailer = Emailer()
     emailer.send("howelldrew99@gmail.com",
                  "Code Finished",
                  "College Family Generator has finished")
+    """
 
     choice = input("Save allocation? (Y or N): ")
     if choice.lower() != "n":
