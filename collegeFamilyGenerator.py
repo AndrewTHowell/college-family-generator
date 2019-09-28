@@ -50,15 +50,15 @@ SLOTS = 3
 CURRENTPATH = dirname(abspath(__file__)) + "\\"
 CSVLOCATION = CURRENTPATH + "Import Files\\"
 
-MULTIPLIERS = {"yearGoingInto":   1,
-               "childrenAlready": 1,
-               "subjects":        1,
-               "contactAmount":   1,
-               "meetingPlaces":   1,
+MULTIPLIERS = {"yearGoingInto":   2,
+               "childrenAlready": 3,
+               "subjects":        5,
+               "contactAmount":   3,
+               "meetingPlaces":   4,
                "arts":            1,
                "sports":          1,
                "entertainment":   1,
-               "nightOut":        1}
+               "nightOut":        2}
 
 POSSIBLEVALUES = {"yearGoingInto":   ["Year 2",
                                       "Year 3",
@@ -600,8 +600,6 @@ def simAnneal(maxTemp, alpha, temperatureEndValue):
 
         t += 1
 
-    print(t)
-
     return [bestState, bestValue]
 
 
@@ -614,10 +612,33 @@ def main():
 
     startTime = time.time()
 
-    maxTemp = 1000
-    alpha = 0.99
-    temperatureEndValue = 0.001
-    bestAllocation, bestValue = simAnneal(maxTemp, alpha)
+    maxTemp = 1000000
+    alpha = 0.98
+    temperatureEndValue = 0.00001
+    bestAllocation, bestValue = simAnneal(maxTemp, alpha, temperatureEndValue)
+
+    """
+    Testing parameters
+    for maxTemp in [10000, 100000, 1000000]:
+        print("Max Temp: {0}".format(maxTemp))
+        for tempAlpha in range(95, 100):
+            alpha = tempAlpha / 100
+            print("    Alpha: {0}".format(alpha))
+            for temperatureEndValue in [0.001, 0.0001, 0.00001, 0.000001]:
+                print("        Temperature End Value: {0}".format(temperatureEndValue))
+                total = 0
+                N = 10
+                startTime = time.time()
+                for i in range(N):
+                    bestAllocation, bestValue = simAnneal(maxTemp,
+                                                          alpha,
+                                                          temperatureEndValue)
+                    total += bestValue
+                timeElapsed = time.time() - startTime
+                average = round(total/N)
+                print("            Average:", average)
+                print("            Points per second:", round(average/timeElapsed))
+    """
 
     timeElapsed = time.time() - startTime
 
@@ -625,6 +646,12 @@ def main():
     print("Optimum Allocation Score: {0:.1f}".format(bestValue))
     print("{0:02}:{1:02}".format(round(timeElapsed // 60),
                                  round(timeElapsed % 60)))
+
+    # Send email to self, notifiying me that the code has finished
+    emailer = Emailer()
+    emailer.send("howelldrew99@gmail.com",
+                 "Code Finished",
+                 "College Family Generator has finished")
 
     choice = input("Save allocation? (Y or N): ")
     if choice.lower() != "n":
@@ -646,9 +673,3 @@ print("I.E. remove Jack from Children.csv"
 print("If emailing out, remember to email Sam that he also has Jack")
 
 main()
-
-# Send email to self, notifiying me that the code has finished
-# emailer = Emailer()
-# emailer.send("howelldrew99@gmail.com",
-#              "Code Finished",
-#              "College Family Generator has finished")
