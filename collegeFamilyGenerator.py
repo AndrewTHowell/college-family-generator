@@ -652,10 +652,3 @@ main()
 # emailer.send("howelldrew99@gmail.com",
 #              "Code Finished",
 #              "College Family Generator has finished")
-<<<<<<< HEAD
-=======
-
-# Export allocations as JSON
-
-# Evaluate child interest similarities
->>>>>>> 25448d57447b2958129902b6b19f260085141f0b
