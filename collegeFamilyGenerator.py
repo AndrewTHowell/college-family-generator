@@ -149,6 +149,7 @@ NUMBEROFCHILDREN = len(children.index)
 NUMBEROFPARENTS = len(parents.index)
 NUMBEROFPARENTSLOTS = SLOTS * NUMBEROFPARENTS
 
+
 # Region: Panda Structures
 
 # Parents : ID, email, name1, name2, name3, yearGoingInto, childrenAlready,
@@ -161,41 +162,6 @@ NUMBEROFPARENTSLOTS = SLOTS * NUMBEROFPARENTS
 # Region End
 
 # Section End
-
-"""
-# Section: Forming Allocation Data Structure
-
-# row = parents.loc[0]
-# email = row["email"]
-
-# Allocation stored in 2D Array
-allocation = []
-
-# Add Parents to allocation
-# For each parent in the panda
-for index, row in parents.iterrows():
-    # Each Parent has SLOTS child 'slots', so add SLOTS arrays
-    for i in range(SLOTS):
-        allocation.append(-1)
-
-
-# Region: Allocation Structure
-
-# Allocation = [ [ParentID, ChildID], [ParentID, ChildID], ... ]
-
-# Where ParentID repeats SLOTS times (SLOTS child slots)
-# [
-#   [0, -1], [0, -1], [0, -1],
-#   [1, -1], [1, -1], [1, -1],
-#   [2, -1], [2, -1], [2, -1],
-#     ...  ,   ...  ,   ...  ,
-# ]
-
-# Region End
-
-# Section End
-"""
-
 
 # Section: Evaluation Functions
 
@@ -270,36 +236,6 @@ def evaluateMatching(match):
     return matchScore
 
 
-'''def evaluateSubject(parentID, childID):
-
-    print("Evaluating Subject")
-
-    attrID = "subjects"
-
-    # Gets activities info of Parent
-    pSubjects = parents.loc[parentID//SLOTS][attrID]
-    cSubjects = children.loc[childID][attrID]
-
-    # Format cells -> remove spaces, split into list of subjects, become set
-    pSubjects = formatCell(pSubjects)
-    cSubjects = formatCell(cSubjects)
-
-    # If subjects have not been encountered before
-    if evaluateMatching.values[attrID][pSubjects][cSubjects] == -1:
-
-        score = 0
-
-        # Subject evaluation system
-
-        evaluateMatching.values[attrID][pSubjects][cSubjects] = score
-
-    # If subjects have been encountered before
-    else:
-        score = evaluateMatching.values[attrID][pSubjects][cSubjects]
-
-    return score'''
-
-
 def evaluateByScale(parentID, childID, attr):
 
     # Gets values
@@ -325,22 +261,10 @@ def evaluateActivities(parentID, childID, attrID):
 
     score = compareActivities(pActivities, cActivities)
 
-    '''# If activities have not been encountered before
-    if evaluateMatching.values[attrID][pActivities][cActivities] == -1:
-        score = compareActivities(pActivities, cActivities)
-
-        evaluateMatching.values[attrID][pActivities][cActivities] = score
-
-    # If activities have been encountered before
-    else:
-        score = evaluateMatching.values[attrID][pActivities][cActivities]'''
-
     return score
 
 
 # Division: Initialising Static Function Variables
-
-# Need to have dynamic array size for each attribute ##########################
 
 evaluateMatching.values = {}
 
@@ -353,14 +277,6 @@ for parent in range(NUMBEROFPARENTSLOTS):
     evaluateMatching.values["matches"].append(parentSlot)
 
 # print(evaluateMatching.values["matches"])
-
-'''# For each Activity attribute, initialise a dictionary
-# Structure: {attr: {parentActivities: childActivities}}
-for attr in POSSIBLEVALUES.keys():
-    # If value is a list (of activities), Initialise a dict
-    if isinstance(POSSIBLEVALUES[attr], list):
-        evaluateMatching.values[attr] = {}
-        # print("Initialising for {0}".format(attr))'''
 
 
 # Division End
@@ -717,30 +633,3 @@ main()
 # emailer.send("howelldrew99@gmail.com",
 #              "Code Finished",
 #              "College Family Generator has finished")
-
-"""
-perms = permutations(chain(childIDRange, nullIDRange))
-# perms = [(0, 2, 1, -1, -2, -3)]
-
-i = 0
-for perm in perms:
-    allocation = []
-    for slotID in range(NUMBEROFPARENTSLOTS):
-        # print(slotID, perm[slotID])
-        allocation.append([slotID, perm[slotID]])
-    allocationScore = evaluateAllocation(allocation)
-
-    # print(perm)
-    # print(allocationScore)
-
-    if allocationScore > optimumAllocationScore:
-        optimumAllocation = allocation
-        optimumAllocationScore = allocationScore
-
-    if i == 500:
-        break
-    i += 1
-"""
-# Export allocations as JSON
-
-# Evaluate child interest similarities
