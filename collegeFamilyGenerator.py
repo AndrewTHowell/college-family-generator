@@ -33,6 +33,12 @@ from random import random
 # Used to choose two parent slots to swap
 from random import sample
 
+# Used to find local path
+from os.path import dirname, abspath
+
+# Used to save best allocations
+import json
+
 # Section End
 
 # Section: Constants
@@ -40,10 +46,9 @@ from random import sample
 # Max Number of Children per Parent
 SLOTS = 3
 
-# Location of Folder containing CSV Files
-CSVLOCATION = ("C:\\Users\\howel\\OneDrive - Durham University\\Exec\\"
-               "VP Development\\College Families\\college-family-generator\\"
-               "Import Files\\")
+# Location of Folder containing CSV Files (current path + Import Files folder)
+CURRENTPATH = dirname(abspath(__file__)) + "\\"
+CSVLOCATION = CURRENTPATH + "Import Files\\"
 
 MULTIPLIERS = {"yearGoingInto":   1,
                "childrenAlready": 1,
@@ -529,7 +534,7 @@ def generateStartAllocation():
     return allIDList
 
 
-def simAnneal(maxTemp, alpha):
+def simAnneal(maxTemp, alpha, temperatureEndValue):
 
     currentState = generateStartAllocation()
     currentScores = evaluateAllocation(currentState)
@@ -540,7 +545,7 @@ def simAnneal(maxTemp, alpha):
 
     temperature = maxTemp
     t = 0
-    while temperature > 0.01:
+    while temperature > temperatureEndValue:
 
         temperature = schedule(maxTemp, alpha, t)
 
@@ -595,6 +600,8 @@ def simAnneal(maxTemp, alpha):
 
         t += 1
 
+    print(t)
+
     return [bestState, bestValue]
 
 
@@ -607,16 +614,28 @@ def main():
 
     startTime = time.time()
 
-    maxTemp = 100
-    alpha = 0.9
+    maxTemp = 1000
+    alpha = 0.99
+    temperatureEndValue = 0.001
     bestAllocation, bestValue = simAnneal(maxTemp, alpha)
 
     timeElapsed = time.time() - startTime
 
     print("Optimum Allocation: {0}".format(bestAllocation))
     print("Optimum Allocation Score: {0:.1f}".format(bestValue))
-    print("{0:02}:{1:02}".format(round(timeElapsed // 60), (
-                                 round(timeElapsed % 60))))
+    print("{0:02}:{1:02}".format(round(timeElapsed // 60),
+                                 round(timeElapsed % 60)))
+
+    choice = input("Save allocation? (Y or N): ")
+    if choice.lower() != "n":
+        with open(CURRENTPATH + "best.json", "r")as readFile:
+            fileBest = json.load(readFile)
+        if fileBest["bestValue"] < bestValue:
+            print("Best found so far!")
+            newFileBest = {"bestValue": bestValue,
+                           "bestAllocation": bestAllocation}
+            with open(CURRENTPATH + "best.json", "w")as writeFile:
+                json.dump(newFileBest, writeFile)
 
 
 # Section End
@@ -633,3 +652,10 @@ main()
 # emailer.send("howelldrew99@gmail.com",
 #              "Code Finished",
 #              "College Family Generator has finished")
+<<<<<<< HEAD
+=======
+
+# Export allocations as JSON
+
+# Evaluate child interest similarities
+>>>>>>> 25448d57447b2958129902b6b19f260085141f0b
