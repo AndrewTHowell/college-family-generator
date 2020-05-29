@@ -50,10 +50,10 @@ SLOTS = 3
 CURRENTPATH = dirname(abspath(__file__)) + "\\"
 CSVLOCATION = CURRENTPATH + "Import Files\\"
 
-MULTIPLIERS = {"childless":       1000,
+MULTIPLIERS = {"childless":       10000,
                "yearGoingInto":   2,
                "childrenAlready": 3,
-               "subjects":        5,
+               "subjects":        50,
                "contactAmount":   3,
                "meetingPlaces":   4,
                "arts":            1,
@@ -317,24 +317,6 @@ def compareActivities(parentActivities, childActivities):
     # Convert percentage to score out of 10, to 1 decimal place
     score = round(percentageSharedChild / 10, 1)
 
-    #    print("Parent {0}  with Child {1}".format(parentID, childID))
-    #    print()
-    #    print("Parent {0}: ".format(parentID), end='')
-    #    print(parentMeetingPlaces)
-    #    print("Child {0}: ".format(childID), end='')
-    #    print(childrenMeetingPlaces)
-    #    print()
-    #    print("Shared Activities: ", end='')
-    #    print(sharedActivities)
-    #    # print("Total Activities: ", end='')
-    #    # print(totalActivities)
-    #    print("Percentage Shared (Total): ", end='')
-    #    print(str(percentageSharedTotal) + "%")
-    #    print("Percentage Shared (Child): ", end='')
-    #    print(str(percentageSharedChild) + "%")
-    #    print()
-    #    print()
-
     return score
 
 
@@ -560,8 +542,10 @@ def simAnneal(maxTemp, alpha, temperatureEndValue):
 
         # Reevaluate swapped allocation
         for swapID in swapIDs:
-            newValue = evaluateMatching([swapID, currentState[swapID]])
+            nextScores[swapID] = evaluateMatching([swapID,
+                                                   currentState[swapID]])
 
+        """
         # Evaluate each parent group
         for parentID in range(len(nextState)//SLOTS):
             hasChildren = False
@@ -575,6 +559,7 @@ def simAnneal(maxTemp, alpha, temperatureEndValue):
                 nextScores[parentID] = -1 * MULTIPLIERS["childless"]
                 # print(nextScores[parentID])
                 print(nextScores)
+        """
 
         nextValue = sum(nextScores)
 
